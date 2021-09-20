@@ -14,7 +14,7 @@ const orderSchema = new mongoose.Schema({
     type: String
   },
   total: {
-    type: Decimal128
+    type: Number
   },
 
 }, {
