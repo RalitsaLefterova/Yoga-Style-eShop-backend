@@ -2,7 +2,7 @@ const mongoose = require('mongoose')
 const validator = require('validator')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
-// const Task = require('./task')
+const Order = require('./order')
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -33,6 +33,9 @@ const userSchema = new mongoose.Schema({
       }
     }
   },
+  address: {
+    type: String
+  },
   age: {
     type: Number,
     default: 0,
@@ -50,16 +53,23 @@ const userSchema = new mongoose.Schema({
   }],
   avatar: {
     type: Buffer
+  },
+  currency: {
+    type: String
+  },
+  language: {
+    type: String,
+    default: 'EN'
   }
 }, {
   timestamps: true
 })
 
-// userSchema.virtual('tasks', {
-//   ref: 'Task',
-//   localField: '_id',
-//   foreignField: 'owner'
-// })
+userSchema.virtual('orders', {
+  ref: 'Order',
+  localField: '_id',
+  foreignField: 'owner'
+})
 
 userSchema.methods.toJSON = function () {
   const user = this
