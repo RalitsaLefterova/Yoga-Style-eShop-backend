@@ -1,9 +1,7 @@
 {
   "name": "yoga-style-eshop-backend",
   "version": "1.0.0",
-  "description": "Yoga Style eShop - Backend",
-  "main": "index.js",
-  "scripts": {
+  "description": "Yoga Style eShop - Backend", "scripts": {
     "start": "node src/index.js",
     "dev": "env-cmd -f ./config/dev.env nodemon src/index.js",
     "test": "env-cmd -f ./config/test.env jest --watch --runInBand"
@@ -18,6 +16,7 @@
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "express": "^4.17.1",
+    "google-auth-library": "^7.9.2",
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^6.0.5",
     "multer": "^1.4.3",

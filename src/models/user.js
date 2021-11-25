@@ -60,6 +60,10 @@ const userSchema = new mongoose.Schema({
   language: {
     type: String,
     default: 'EN'
+  },
+  resetLink: {
+    data: String,
+    default: ''
   }
 }, {
   timestamps: true
@@ -83,6 +87,7 @@ userSchema.methods.toJSON = function () {
 }
 
 userSchema.methods.generateAuthToken = async function () {
+  console.log('generate token')
   const user = this
   const token = jwt.sign({ _id: user.id.toString() }, process.env.JWT_SECRET, { expiresIn: '7 days' })
   

@@ -20,5 +20,13 @@ const productSchema = new mongoose.Schema({
     image: Buffer,
     color: String,
     size: String
-  }]
+  }],
+  active: {
+    type: Boolean,
+    default: true
+  }
 })
+
+const Product = mongoose.model('Product', productSchema)
+
+module.exports = Product
