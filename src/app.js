@@ -22,8 +22,8 @@ app.use('/collections', collectionRouter)
 app.use('*', (req, res) => {
   res.status(404).json({
     code: 404,
-    error: 'Not found',
-    msg: "The resource you're looking for doesn't exist",
+    error: 'Not found!',
+    msg: "The page you're looking for doesn't exist.",
   });
 });
 

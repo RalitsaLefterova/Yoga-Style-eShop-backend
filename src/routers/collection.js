@@ -4,6 +4,7 @@ const multer = require('multer')
 const sharp = require('sharp')
 const auth = require('../middleware/auth')
 const Collection = require('../models/collection')
+const FileHelper = require('../util/files')
 
 const router = new express.Router()
 
@@ -13,10 +14,6 @@ const storage = multer.diskStorage({
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now()
-    console.log('--- in multer.diskStorage ---')
-    console.log('file in storage', file)
-    console.log('body in storage', req.body)
-
     // Note: Multer does not add extensions to file names, and it’s recommended to return a filename complete with a file extension.
     cb(null, 'collection-' + req.body.title.replace(/\s+/g, '-').toLowerCase() + '-' + uniqueSuffix + path.extname(file.originalname))
   }
@@ -28,7 +25,6 @@ const uploadCollection = multer({
     fileSize: 1000000
   },
   fileFilter(req, file, cb) {
-    console.log('in fileFilter', file)
     if (!file.originalname.match(/\.(jpg|jpeg|png)$/)) {
       return cb(new Error('Please upload jpg, jpeg or png.'))
     }
@@ -38,14 +34,10 @@ const uploadCollection = multer({
 
 // Create collection 
 router.post('/', auth, uploadCollection.single('cover'), async (req, res, next) => {
-  console.log('--- in create collection ---')
-  console.log('req.file', req.file, 'req.body', req.body)
-  // console.log('REQ', req)
   const title = req.body.title
-  const cover = `${process.env.BACKEND_URL}/${req.file.path}`
+  const cover = FileHelper.createFilePath(req.file.path)
 
   const collection = new Collection({ title, cover })
-  console.log('collection before save', collection)
 
   await collection.save()
   res.send('collection created')
@@ -84,9 +76,15 @@ router.get('/', auth, async (req, res) => {
 })
 
 // Edit collection
-router.patch('/:id', auth, async (req, res) => {
+router.patch('/:id', auth, uploadCollection.single('cover'), async (req, res) => {
+  // console.log('in Edit collection req.body', req.body)
+  // console.log('in Edit collection req.file', req.file)
+  if (req.file) { 
+    req.body.cover = FileHelper.createFilePath(req.file.path)
+  }
+
   const updates = Object.keys(req.body)
-  const allowedUpdates = ['title', 'active']
+  const allowedUpdates = ['title', 'active', 'cover']
   const isValidOperation = updates.every((update) => allowedUpdates.includes(update))
 
   if (!isValidOperation) {
@@ -98,13 +96,36 @@ router.patch('/:id', auth, async (req, res) => {
     if (!collection) {
       return res.status(404).send()
     }
+    // console.log('req.body', req.body)
+    // console.log('collection ====>', collection)
+
+    if (req.file) {
+      FileHelper.deleteFile(collection.cover)
+    }
+
     updates.forEach((update) => collection[update] = req.body[update])
+
     await collection.save()
     res.send(collection)
+
   } catch (e) {
     res.status(500).send(e)
   }
 
+})
+
+// Delete collection
+router.delete('/:id', auth, async (req, res) => {
+  try {
+    const collection = await Collection.findOneAndDelete({ _id: req.params.id})
+    if (!collection) {
+      return res.status(404).send()
+    }
+    FileHelper.deleteFile(collection.cover)
+    res.send('Collection was deleted successfully.')
+  } catch (e) {
+    res.status(500).send(e)
+  }
 })
 
 
