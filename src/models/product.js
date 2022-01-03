@@ -9,7 +9,7 @@ const productSchema = new mongoose.Schema({
     type: String
   },
   price: {
-    type: Decimal128,
+    type: Number,
     required: true
   },
   collectionId: {
@@ -24,7 +24,14 @@ const productSchema = new mongoose.Schema({
   active: {
     type: Boolean,
     default: true
-  }
+  },
+  // collection: {
+  //   type: mongoose.Schema.Types.ObjectId,
+  //   required: true,
+  //   ref: 'Collection'
+  // }
+}, {
+  timestamps: true
 })
 
 const Product = mongoose.model('Product', productSchema)
