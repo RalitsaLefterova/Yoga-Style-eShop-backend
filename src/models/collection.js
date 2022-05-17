@@ -14,6 +14,12 @@ const collectionSchema = new mongoose.Schema({
   }
 })
 
+collectionSchema.virtual('products', {
+  ref: 'Product',
+  localField: '_id',
+  foreignField: 'collection'
+})
+
 const Collection = mongoose.model('Collection', collectionSchema)
 
 module.exports = Collection

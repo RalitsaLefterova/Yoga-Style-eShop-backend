@@ -12,24 +12,28 @@ const productSchema = new mongoose.Schema({
     type: Number,
     required: true
   },
-  collectionId: {
-    type: Number,
+  // collectionId: {
+  //   type: Number,
+  //   required: true
+  // },
+  mainImageUrl: {
+    type: String,
     required: true
   },
   images: [{
-    image: Buffer,
+    imageUrl: String,
     color: String,
     size: String
   }],
   active: {
     type: Boolean,
-    default: true
+    default: false
   },
-  // collection: {
-  //   type: mongoose.Schema.Types.ObjectId,
-  //   required: true,
-  //   ref: 'Collection'
-  // }
+  collection_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    ref: 'Collection'
+  }
 }, {
   timestamps: true
 })

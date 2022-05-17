@@ -47,7 +47,30 @@ router.post('/', auth, uploadCollection.single('cover'), async (req, res, next) 
     res.status(400).send({ error: error.message })
   })
 
-// Get collection
+// Get all collections
+router.get('/', async (req, res) => {
+  let isShortInfo = !!req.query.short
+  try {
+    const collections = await Collection.find({})
+    // console.log('collections', collections)
+    if (isShortInfo) {
+      let shortInfoCollection = []
+      collections.map(collection => {
+        shortInfoCollection.push({
+          title: collection.title,
+          _id: collection._id
+        })
+      })
+      res.send(shortInfoCollection)
+    } else {
+      res.send(collections)
+    }
+  } catch (e) {
+    res.status(500).send(e)
+  }
+})
+
+// Get collection by id
 router.get('/:id', async (req, res) => {
   console.log('get collection by id', req.params.id)
   console.log('req.file', req.file)
@@ -65,17 +88,7 @@ router.get('/:id', async (req, res) => {
   }
 })
 
-// Get all collections
-router.get('/', auth, async (req, res) => {
-  try {
-    const collections = await Collection.find({})
-    res.send(collections)
-  } catch (e) {
-    res.status(500).send(e)
-  }
-})
-
-// Edit collection
+// Edit collection (Admin)
 router.patch('/:id', auth, uploadCollection.single('cover'), async (req, res) => {
   // console.log('in Edit collection req.body', req.body)
   // console.log('in Edit collection req.file', req.file)
@@ -114,7 +127,7 @@ router.patch('/:id', auth, uploadCollection.single('cover'), async (req, res) =>
 
 })
 
-// Delete collection
+// Delete collection (Admin)
 router.delete('/:id', auth, async (req, res) => {
   try {
     const collection = await Collection.findOneAndDelete({ _id: req.params.id})
