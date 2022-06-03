@@ -12,10 +12,11 @@ const productSchema = new mongoose.Schema({
     type: Number,
     required: true
   },
-  // collectionId: {
-  //   type: Number,
-  //   required: true
-  // },
+  stock: {
+    type: Number,
+    required: false,
+    default: 0
+  },
   mainImageUrl: {
     type: String,
     required: true
@@ -29,7 +30,7 @@ const productSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
-  collection_id: {
+  collectionId: {
     type: mongoose.Schema.Types.ObjectId,
     required: true,
     ref: 'Collection'

@@ -88,6 +88,8 @@ router.get('/:id', async (req, res) => {
   }
 })
 
+
+
 // Edit collection (Admin)
 router.patch('/:id', auth, uploadCollection.single('cover'), async (req, res) => {
   // console.log('in Edit collection req.body', req.body)
@@ -140,7 +142,5 @@ router.delete('/:id', auth, async (req, res) => {
     res.status(500).send(e)
   }
 })
-
-
 
 module.exports = router
