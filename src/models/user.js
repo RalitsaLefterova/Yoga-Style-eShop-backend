@@ -87,9 +87,8 @@ userSchema.methods.toJSON = function () {
 }
 
 userSchema.methods.generateAuthToken = async function () {
-  console.log('generate token')
   const user = this
-  const token = jwt.sign({ _id: user.id.toString() }, process.env.JWT_SECRET, { expiresIn: '7 days' })
+  const token = jwt.sign({ _id: user.id.toString() }, process.env.JWT_SECRET, { expiresIn: '8h' })
   
   user.tokens = user.tokens.concat({ token })
   await user.save()
@@ -99,16 +98,13 @@ userSchema.methods.generateAuthToken = async function () {
 
 userSchema.statics.findByCredentials = async (email, password) => {
   const user = await User.findOne({ email })
+  const errorMessage = 'Invalid Credentials'
 
-  if (!user) {
-    throw new Error('Unable to login')
-  }
+  if (!user) throw new Error(errorMessage)
 
   const isMatch = await bcrypt.compare(password, user.password)
 
-  if (!isMatch) {
-    throw new Error('Unable to login')
-  }
+  if (!isMatch) throw new Error(errorMessage)
 
   return user
 }
@@ -121,13 +117,6 @@ userSchema.pre('save', async function (next) {
   }
   next()
 })
-
-// Delete user tasks when user is removed
-// userSchema.pre('remove', async function (next) {
-//   const user = this
-//   await Task.deleteMany({ owner: user._id })
-//   next()
-// })
 
 const User = mongoose.model('User', userSchema)
 

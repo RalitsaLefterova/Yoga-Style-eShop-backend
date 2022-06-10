@@ -8,26 +8,34 @@ const router = new express.Router()
 const client = new OAuth2Client(process.env.CLIENT_ID)
 
 // Sign-up
-router.post('/users', async (req, res) => {
+router.post('/sign-up', async (req, res) => {
   const user = new User(req.body)
   try {
     await user.save()
     // sendWelcomeEmail(user.email, user.name)
     const token = await user.generateAuthToken()
     res.status(201).send({ user, token })
-  } catch (e) {
-    res.status(400).send(e)
+  } catch (error) {
+    console.log(error.name)
+    let errorMessage = error
+    if (error.name == 'MongoServerError' && error.code === 11000) {
+      errorMessage = 'User with this email already exists'
+    }
+    if (error.name == 'ValidationError') {
+      // TODO Maybe remove this. Validations will be in the frontend.
+    }
+    res.status(400).send(errorMessage)
   }
 })
 
 // Login
-router.post('/users/login', async (req, res) => {
+router.post('/login', async (req, res) => {
   try {
     const user = await User.findByCredentials(req.body.email, req.body.password)
     const token = await user.generateAuthToken()
     res.send({ user, token })
-  } catch (e) {
-    res.status(400).send(e)
+  } catch (error) {
+    res.status(400).send(error.message)
   }
 })
 
@@ -93,20 +101,20 @@ router.post('/googlelogin', async (req, res) => {
 
 
 // Logout
-router.post('/users/logout', auth, async (req, res) => {
+router.post('/logout', auth, async (req, res) => {
   try {
     req.user.tokens = req.user.tokens.filter((token) => {
       return token.token !== req.token
     })
     await req.user.save()
-    res.send()
+    res.send('Success log out!')
   } catch (e) {
     res.status(500).send(e)
   }
 })
 
 // Logout All
-router.post('/users/logoutall', auth, async (req, res) => {
+router.post('/logoutall', auth, async (req, res) => {
   try {
     req.user.tokens = []
     await req.user.save()
