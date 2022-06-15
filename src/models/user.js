@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken')
 const Order = require('./order')
 
 const userSchema = new mongoose.Schema({
-  name: {
+  fullName: {
     type: String,
     required: true,
     trim: true
@@ -33,17 +33,31 @@ const userSchema = new mongoose.Schema({
       }
     }
   },
-  address: {
-    type: String
+  addresses: [{
+    street: {
+      type: String
+    },
+    city: {
+      type: String
+    },
+    postalCode: {
+      type: String
+    },
+    country: {
+      type: String
+    },
+    city: {
+      type: String
+    },
+    city: {
+      type: String
+    },
+  }],
+  birthday: {
+    type: Date
   },
-  age: {
-    type: Number,
-    default: 0,
-    validate(value) {
-      if (value < 0) {
-        throw new Error('Age must be a positive number!')
-      }
-    }
+  phone: {
+    type: String
   },
   tokens: [{
     token: {
@@ -55,12 +69,19 @@ const userSchema = new mongoose.Schema({
     type: Buffer
   },
   currency: {
-    type: String
+    type: String,
+    default: 'EUR'
   },
   language: {
     type: String,
     default: 'EN'
   },
+  // orders: [{
+  //   status: String,
+  //   products: {
+  //     type: Array
+  //   }
+  // }],
   resetLink: {
     data: String,
     default: ''

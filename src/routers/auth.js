@@ -2,17 +2,20 @@ const express = require('express')
 const auth = require('../middleware/auth')
 const { OAuth2Client } = require('google-auth-library')
 const User = require('../models/user')
-const { sendWelcomeEmail, sendCancelationEmail } = require('../emails/accounts')
+const { sendWelcomeEmail } = require('../emails/accounts')
 const router = new express.Router()
 
 const client = new OAuth2Client(process.env.CLIENT_ID)
 
 // Sign-up
 router.post('/sign-up', async (req, res) => {
+  console.log('in sign up')
   const user = new User(req.body)
+  
   try {
     await user.save()
-    // sendWelcomeEmail(user.email, user.name)
+    console.log('step 1')
+    sendWelcomeEmail(user.email, user.name)
     const token = await user.generateAuthToken()
     res.status(201).send({ user, token })
   } catch (error) {
@@ -78,7 +81,7 @@ router.post('/googlelogin', async (req, res) => {
 
     try {
       await user.save()
-      // sendWelcomeEmail(user.email, user.name)
+      sendWelcomeEmail(user.email, user.name)
       const token = await user.generateAuthToken()
       res.status(201).send({ user, token })
     } catch (e) {
@@ -123,6 +126,9 @@ router.post('/logoutall', auth, async (req, res) => {
     res.status(500).send(e)
   }
 })
+
+// Reset password
+
 
 
 module.exports = router

@@ -3,13 +3,14 @@ const multer = require('multer')
 const sharp = require('sharp')
 const auth = require('../middleware/auth')
 const User = require('../models/user')
-const { sendWelcomeEmail, sendCancelationEmail } = require('../emails/accounts')
+const { sendCancelationEmail } = require('../emails/accounts')
 const router = new express.Router()
 
 
 
 // GET user profile
 router.get('/me', auth, async (req, res) => {
+  console.log('req.user', req.user)
   res.send(req.user)
 })
 
@@ -38,19 +39,23 @@ router.get('/:id', async (req, res) => {
 
 // USER: Update profile
 router.patch('/me', auth, async (req, res) => {
+  console.log('req.body', req.body)
   const updates = Object.keys(req.body)
-  const allowedUpdates = ['name', 'email', 'password', 'age', 'address']
+  const allowedUpdates = ['fullName', 'email', 'password', 'birthday', 'addresses', 'phone', 'language', 'currency']
   const isValidOperation = updates.every((update) => allowedUpdates.includes(update))
-
+  console.log('isValidOperation', isValidOperation)
   if (!isValidOperation) {
     return res.status(400).send({ error: 'Invalid operation!'})
   }
-
+  console.log('step 1')
   try {
     updates.forEach((update) => req.user[update] = req.body[update])
+    console.log('step 2')
     await req.user.save()
+    console.log('step 3')
     res.send(req.user)
   } catch (e) {
+    console.log('step 4 - error')
     res.status(500).send(e)
   }
 })
@@ -58,7 +63,7 @@ router.patch('/me', auth, async (req, res) => {
 // ADMIN: Update user profile
 router.patch('/:id', async (req, res) => {
   const updates = Object.keys(req.body)
-  const allowedUpdates = ['name', 'email', 'password', 'age']
+  const allowedUpdates = ['fullName', 'email', 'password', 'age']
   const isValidOperation = updates.every((update) => allowedUpdates.includes(update))
 
   if (!isValidOperation) {
@@ -82,10 +87,11 @@ router.patch('/:id', async (req, res) => {
 
 // USER: Delete profile
 router.delete('/me', auth, async (req, res) => {
+  console.log(req.user)
   try {
     await req.user.remove()
     // await User.deleteOne({ _id: req.user._id })
-    // sendCancelationEmail(req.user.email, req.user.name)
+    sendCancelationEmail(req.user.email, req.user.name)
     res.send(req.user)
   } catch (e) {
     res.status(500).send(e)
