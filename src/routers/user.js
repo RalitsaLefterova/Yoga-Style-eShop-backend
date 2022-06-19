@@ -4,6 +4,7 @@ const sharp = require('sharp')
 const auth = require('../middleware/auth')
 const User = require('../models/user')
 const { sendCancelationEmail } = require('../emails/accounts')
+const { findById } = require('../models/user')
 const router = new express.Router()
 
 
@@ -39,23 +40,43 @@ router.get('/:id', async (req, res) => {
 
 // USER: Update profile
 router.patch('/me', auth, async (req, res) => {
-  console.log('req.body', req.body)
+  // console.log('req.body', req.body)
   const updates = Object.keys(req.body)
-  const allowedUpdates = ['fullName', 'email', 'password', 'birthday', 'addresses', 'phone', 'language', 'currency']
+  const allowedUpdates = ['fullName', 'email', 'password', 'birthday', 'address', 'phone', 'language', 'currency']
   const isValidOperation = updates.every((update) => allowedUpdates.includes(update))
-  console.log('isValidOperation', isValidOperation)
+  // console.log('isValidOperation', isValidOperation)
   if (!isValidOperation) {
     return res.status(400).send({ error: 'Invalid operation!'})
   }
-  console.log('step 1')
+  // console.log('step 1')
   try {
-    updates.forEach((update) => req.user[update] = req.body[update])
-    console.log('step 2')
+    updates.forEach((update) => {
+      if (update == 'address') {
+        // console.log('user addresses => ', req.user.addresses)
+        // console.log('req.body[update] => ', req.body[update])
+        
+        const existedAddress = req.user.addresses.id(req.body[update]._id)
+        
+        // console.log('existedAddress', existedAddress)
+        
+        if (existedAddress) {
+          
+          existedAddress.set(req.body[update])
+
+        } else {
+          req.user.addresses.push(req.body[update])
+        }
+      } else {
+        req.user[update] = req.body[update]
+      }
+      
+    })
+    // console.log('step 2 updated req.user.addresses', req.user.addresses)
     await req.user.save()
-    console.log('step 3')
+    // console.log('step 3', req.user)
     res.send(req.user)
   } catch (e) {
-    console.log('step 4 - error')
+    // console.log('step 4 - error', e)
     res.status(500).send(e)
   }
 })

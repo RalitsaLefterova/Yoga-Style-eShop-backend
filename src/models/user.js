@@ -34,24 +34,12 @@ const userSchema = new mongoose.Schema({
     }
   },
   addresses: [{
-    street: {
-      type: String
-    },
-    city: {
-      type: String
-    },
-    postalCode: {
-      type: String
-    },
-    country: {
-      type: String
-    },
-    city: {
-      type: String
-    },
-    city: {
-      type: String
-    },
+    defaultShippingAddress: Boolean,
+    defaultBillingAddress: Boolean,
+    street: String,
+    city: String,
+    postalCode: String,
+    country: String
   }],
   birthday: {
     type: Date
@@ -118,16 +106,26 @@ userSchema.methods.generateAuthToken = async function () {
 }
 
 userSchema.statics.findByCredentials = async (email, password) => {
-  const user = await User.findOne({ email })
-  const errorMessage = 'Invalid Credentials'
+  console.log(email, password, { email })
+  console.log('before searching user')
+  try {
+    console.log('inside try')
+    const user = await User.findOne({ email })
 
-  if (!user) throw new Error(errorMessage)
+    console.log('after searching user', user)
+    const errorMessage = 'Invalid Credentials'
 
-  const isMatch = await bcrypt.compare(password, user.password)
+    if (!user) throw new Error(errorMessage)
 
-  if (!isMatch) throw new Error(errorMessage)
+    const isMatch = await bcrypt.compare(password, user.password)
 
-  return user
+    if (!isMatch) throw new Error(errorMessage)
+
+    return user
+    
+  } catch(error) {
+    console.log({error})
+  }
 }
 
 // Hash the plane text password before saving
