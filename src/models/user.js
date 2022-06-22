@@ -64,12 +64,11 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: 'EN'
   },
-  // orders: [{
-  //   status: String,
-  //   products: {
-  //     type: Array
-  //   }
-  // }],
+  cart: [{
+    _id: false,
+    productId: String,
+    quantity: Number
+  }],
   resetLink: {
     data: String,
     default: ''
@@ -106,13 +105,13 @@ userSchema.methods.generateAuthToken = async function () {
 }
 
 userSchema.statics.findByCredentials = async (email, password) => {
-  console.log(email, password, { email })
-  console.log('before searching user')
+  // console.log(email, password, { email })
+  // console.log('before searching user')
   try {
-    console.log('inside try')
+    // console.log('inside try')
     const user = await User.findOne({ email })
 
-    console.log('after searching user', user)
+    // console.log('after searching user', user)
     const errorMessage = 'Invalid Credentials'
 
     if (!user) throw new Error(errorMessage)

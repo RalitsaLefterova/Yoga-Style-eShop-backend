@@ -5,13 +5,12 @@ const auth = require('../middleware/auth')
 const User = require('../models/user')
 const { sendCancelationEmail } = require('../emails/accounts')
 const { findById } = require('../models/user')
+
 const router = new express.Router()
-
-
 
 // GET user profile
 router.get('/me', auth, async (req, res) => {
-  console.log('req.user', req.user)
+  // console.log('req.user', req.user)
   res.send(req.user)
 })
 

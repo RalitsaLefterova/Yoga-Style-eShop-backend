@@ -88,8 +88,8 @@ router.get('/', async (req, res) => {
 
 // Edit product (Admin)
 router.patch('/:id', auth, uploadProduct.single('mainImageUrl'), async (req, res) => {
-  console.log('in Edit product req.body', req.body)
-  console.log('in Edit product req.file', req.file)
+  // console.log('in Edit product req.body', req.body)
+  // console.log('in Edit product req.file', req.file)
 
   if (req.file) { 
     req.body.mainImageUrl = FileHelper.createFilePath(req.file.path)
@@ -108,8 +108,8 @@ router.patch('/:id', auth, uploadProduct.single('mainImageUrl'), async (req, res
     if (!product) {
       return res.status(404).send()
     }
-    console.log('req.body', req.body)
-    console.log('product ====>', product)
+    // console.log('req.body', req.body)
+    // console.log('product ====>', product)
 
     if (req.file) {
       FileHelper.deleteFile(product.mainImageUrl)
@@ -127,14 +127,14 @@ router.patch('/:id', auth, uploadProduct.single('mainImageUrl'), async (req, res
 
 // Get product by id
 router.get('/:id', async (req, res) => {
-  console.log('get product by id', req.params.id)
-  console.log('req.file', req.file)
+  // console.log('get product by id', req.params.id)
+  // console.log('req.file', req.file)
   const _id = req.params.id
-  console.log('_id', _id)
+  // console.log('_id', _id)
 
   try {
     const product = await Product.findById(_id)
-    console.log('product res', product)
+    // console.log('product res', product)
     if (!product) {
       return res.status(404).send()
     }

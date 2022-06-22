@@ -5,8 +5,9 @@ require('./db/mongoose')
 
 const authRouter = require('./routers/auth')
 const userRouter = require('./routers/user')
-const collectionsRouter = require('./routers/collection')
-const productsRouter = require('./routers/products')
+const collectionRouter = require('./routers/collection')
+const productRouter = require('./routers/product')
+const cartRouter = require('./routers/cart')
 
 const app = express()
 
@@ -18,8 +19,9 @@ app.use(cors())
 
 app.use('/auth', authRouter)
 app.use('/users', userRouter)
-app.use('/collections', collectionsRouter)
-app.use('/products', productsRouter)
+app.use('/collections', collectionRouter)
+app.use('/products', productRouter)
+app.use('/cart', cartRouter)
 
 app.use('*', (req, res) => {
   res.status(404).json({

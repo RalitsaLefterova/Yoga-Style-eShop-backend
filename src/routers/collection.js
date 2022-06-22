@@ -72,13 +72,9 @@ router.get('/', async (req, res) => {
 
 // Get collection by id
 router.get('/:id', async (req, res) => {
-  console.log('get collection by id', req.params.id)
-  console.log('req.file', req.file)
   const _id = req.params.id
-  console.log('_id', _id)
   try {
     const collection = await Collection.findById(_id)
-    console.log('collection res', collection)
     if (!collection) {
       return res.status(404).send()
     }

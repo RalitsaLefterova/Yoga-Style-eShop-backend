@@ -9,7 +9,7 @@ const client = new OAuth2Client(process.env.CLIENT_ID)
 
 // Sign-up
 router.post('/sign-up', async (req, res) => {
-  console.log('in sign up')
+  // console.log('in sign up')
   const user = new User(req.body)
   
   try {
@@ -34,7 +34,7 @@ router.post('/sign-up', async (req, res) => {
 router.post('/login', async (req, res) => {
   try {
     const user = await User.findByCredentials(req.body.email, req.body.password)
-    console.log(user)
+    // console.log(user)
     const token = await user.generateAuthToken()
     res.send({ user, token })
   } catch (error) {
