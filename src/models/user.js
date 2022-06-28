@@ -4,6 +4,11 @@ const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const Order = require('./order')
 
+const cartSchema = new mongoose.Schema({
+    productId: String,
+    quantity: Number
+}, { _id : false })
+
 const userSchema = new mongoose.Schema({
   fullName: {
     type: String,
@@ -64,11 +69,12 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: 'EN'
   },
-  cart: [{
-    _id: false,
-    productId: String,
-    quantity: Number
-  }],
+  cart: [cartSchema],
+  // cart: [{
+  //   _id: false,
+  //   productId: String,
+  //   quantity: Number
+  // }],
   resetLink: {
     data: String,
     default: ''

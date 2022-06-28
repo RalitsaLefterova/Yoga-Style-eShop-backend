@@ -2,7 +2,9 @@ const express = require('express')
 const auth = require('../middleware/auth')
 const { OAuth2Client } = require('google-auth-library')
 const User = require('../models/user')
+const Product = require('../models/product')
 const { sendWelcomeEmail } = require('../emails/accounts')
+
 const router = new express.Router()
 
 const client = new OAuth2Client(process.env.CLIENT_ID)
@@ -33,10 +35,45 @@ router.post('/sign-up', async (req, res) => {
 // Login
 router.post('/login', async (req, res) => {
   try {
-    const user = await User.findByCredentials(req.body.email, req.body.password)
+    const userInfo = await User.findByCredentials(req.body.email, req.body.password)
     // console.log(user)
-    const token = await user.generateAuthToken()
-    res.send({ user, token })
+    const token = await userInfo.generateAuthToken()
+
+    const { _id, fullName, email, phone, birthday, language, currency } = userInfo
+
+    let user = {
+      _id,
+      fullName,
+      email,
+      phone,
+      birthday,
+      language,
+      currency
+    }
+
+    let cart = []
+
+    if (userInfo.cart.length > 0) {
+      let productIds = userInfo.cart.map(product => product.productId)
+ 
+      let cartProducts = await Product.find({ _id: productIds }).select(['_id', 'title', 'mainImageUrl', 'price'])
+
+   
+      cart = cartProducts.map(item => {
+        let foundProduct = userInfo.cart.filter(product => {
+          return item._id.equals(product.productId)
+        })
+   
+        if (foundProduct.length > 0) {
+          // console.log('item', item)
+          // console.log('{...item}', {...item})
+          return { ...item['_doc'], quantity: foundProduct[0].quantity}
+        }
+      })
+      
+    }
+    
+    res.send({ user, token, cart })
   } catch (error) {
     res.status(400).send(error.message)
   }
