@@ -4,7 +4,7 @@ const multer = require('multer')
 const sharp = require('sharp')
 const auth = require('../middleware/auth')
 const Collection = require('../models/collection')
-const FileHelper = require('../util/files')
+const FileHelper = require('../utils/files')
 
 const router = new express.Router()
 

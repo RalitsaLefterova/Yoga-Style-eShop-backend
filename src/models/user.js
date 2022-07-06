@@ -4,10 +4,21 @@ const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const Order = require('./order')
 
-const cartSchema = new mongoose.Schema({
-    productId: String,
-    quantity: Number
-}, { _id : false })
+const itemSchema = new mongoose.Schema({
+  productId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Product",
+  },
+  quantity: {
+    type: Number,
+    required: true,
+    min: [1, 'Quantity can not be less then 1.']
+  }
+}, {
+  _id : false
+}, {
+  timestamps: true
+})
 
 const userSchema = new mongoose.Schema({
   fullName: {
@@ -39,13 +50,25 @@ const userSchema = new mongoose.Schema({
     }
   },
   addresses: [{
-    defaultShippingAddress: Boolean,
-    defaultBillingAddress: Boolean,
+    isShippingAddress: Boolean,
+    isBillingAddress: Boolean,
     street: String,
     city: String,
     postalCode: String,
     country: String
   }],
+  // shippingAddress: {
+  //   street: {type: String, required: 'Street is required'},
+  //   city: {type: String, required: 'City is required'},
+  //   zipcode: {type: String, required: 'Zip Code is required'},
+  //   country: {type: String, required: 'Country is required'}
+  // },
+  // billingAddress: {
+  //   street: {type: String, required: 'Street is required'},
+  //   city: {type: String, required: 'City is required'},
+  //   zipcode: {type: String, required: 'Zip Code is required'},
+  //   country: {type: String, required: 'Country is required'}
+  // },
   birthday: {
     type: Date
   },
@@ -69,18 +92,19 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: 'EN'
   },
-  cart: [cartSchema],
-  // cart: [{
-  //   _id: false,
-  //   productId: String,
-  //   quantity: Number
-  // }],
+  cart: [itemSchema],
   resetLink: {
     data: String,
     default: ''
   }
 }, {
   timestamps: true
+})
+
+itemSchema.virtual('products', {
+  ref: 'Product',
+  localField: 'productId',
+  foreignField: 'id'
 })
 
 userSchema.virtual('orders', {
@@ -111,13 +135,9 @@ userSchema.methods.generateAuthToken = async function () {
 }
 
 userSchema.statics.findByCredentials = async (email, password) => {
-  // console.log(email, password, { email })
-  // console.log('before searching user')
-  try {
-    // console.log('inside try')
-    const user = await User.findOne({ email })
 
-    // console.log('after searching user', user)
+  try {
+    const user = await User.findOne({ email })
     const errorMessage = 'Invalid Credentials'
 
     if (!user) throw new Error(errorMessage)
@@ -131,6 +151,30 @@ userSchema.statics.findByCredentials = async (email, password) => {
   } catch(error) {
     console.log({error})
   }
+}
+
+userSchema.methods.getCartDetails = async function() {
+  let cart = []
+  
+  try {
+    const resultOfPopulation = await this.populate({
+      path: 'cart.productId',
+      select: 'title price mainImageUrl'
+    })
+
+    let populatedCart = resultOfPopulation.cart.toObject()
+
+    if (populatedCart.length > 0) {
+      cart = populatedCart.map(item => {
+        return { ...item.productId, quantity: item.quantity }
+      })
+    }    
+  }
+  catch (error) {
+    throw new Error(error)
+  }
+  
+  return cart
 }
 
 // Hash the plane text password before saving

@@ -2,7 +2,7 @@ const express = require('express')
 const path = require('path')
 const multer = require('multer')
 const auth = require('../middleware/auth')
-const FileHelper = require('../util/files')
+const FileHelper = require('../utils/files')
 const Collection = require('../models/collection')
 const Product = require('../models/product')
 
@@ -58,10 +58,10 @@ router.get('/', async (req, res) => {
   const match = {}
   const sort = {}
   let searchOptions = {}
-
+  
   if (req.query.collectionTitle) {
     const collection = await Collection.find({ title: req.query.collectionTitle })
-
+    
     if (!collection) {
       return res.status(404).send('collection not found')
     }
@@ -80,6 +80,7 @@ router.get('/', async (req, res) => {
 
   try {
     const products = await Product.find(searchOptions)
+    console.log({products})
     res.send(products)
   } catch (e) {
     res.status(500).send(e)

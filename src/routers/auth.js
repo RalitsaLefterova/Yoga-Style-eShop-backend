@@ -3,7 +3,9 @@ const auth = require('../middleware/auth')
 const { OAuth2Client } = require('google-auth-library')
 const User = require('../models/user')
 const Product = require('../models/product')
+
 const { sendWelcomeEmail } = require('../emails/accounts')
+const { getUserShortInfo } = require('../utils/user-utils')
 
 const router = new express.Router()
 
@@ -36,42 +38,9 @@ router.post('/sign-up', async (req, res) => {
 router.post('/login', async (req, res) => {
   try {
     const userInfo = await User.findByCredentials(req.body.email, req.body.password)
-    // console.log(user)
     const token = await userInfo.generateAuthToken()
-
-    const { _id, fullName, email, phone, birthday, language, currency } = userInfo
-
-    let user = {
-      _id,
-      fullName,
-      email,
-      phone,
-      birthday,
-      language,
-      currency
-    }
-
-    let cart = []
-
-    if (userInfo.cart.length > 0) {
-      let productIds = userInfo.cart.map(product => product.productId)
- 
-      let cartProducts = await Product.find({ _id: productIds }).select(['_id', 'title', 'mainImageUrl', 'price'])
-
-   
-      cart = cartProducts.map(item => {
-        let foundProduct = userInfo.cart.filter(product => {
-          return item._id.equals(product.productId)
-        })
-   
-        if (foundProduct.length > 0) {
-          // console.log('item', item)
-          // console.log('{...item}', {...item})
-          return { ...item['_doc'], quantity: foundProduct[0].quantity}
-        }
-      })
-      
-    }
+    const user = getUserShortInfo(userInfo)
+    const cart = await userInfo.getCartDetails()
     
     res.send({ user, token, cart })
   } catch (error) {
@@ -84,7 +53,7 @@ router.post('/googlelogin', async (req, res) => {
   const { tokenId } = req.body
   let email_verified = false
   let email = ''
-  let name = ''
+  let fullName = ''
   
   // We need to varify the token we send from the client side 
   // and the token we are using in the backend are the same or not
@@ -96,7 +65,7 @@ router.post('/googlelogin', async (req, res) => {
     const payload = ticket.getPayload()
 
     email_verified = payload.email_verified
-    name = payload.name
+    fullName = payload.name
     email = payload.email
     
     if (!email_verified) {
@@ -114,13 +83,16 @@ router.post('/googlelogin', async (req, res) => {
     // User does not exist in DB and trying to login for the first time
     // Create a new user
     const password = email + process.env.GOOGLE_SIGN_IN_KEY
-    const user = new User({ name, email, password })
+    const user = new User({ fullName, email, password })
 
     try {
       await user.save()
-      sendWelcomeEmail(user.email, user.name)
+      sendWelcomeEmail(user.email, user.fullName)
       const token = await user.generateAuthToken()
-      res.status(201).send({ user, token })
+      const userShortInfo = getUserShortInfo(user)
+      const cart = []
+
+      res.status(201).send({ user: userShortInfo, token, cart })
     } catch (e) {
       res.status(400).send(e)
       
@@ -131,7 +103,10 @@ router.post('/googlelogin', async (req, res) => {
   // User exist in DB
   try {
     const token = await user.generateAuthToken()
-    res.send({ user, token })
+    const userShortInfo = getUserShortInfo(user)
+    const cart = await user.getCartDetails()
+    
+    res.send({ user: userShortInfo, token, cart })
   } catch (e) {
     console.log({e})
     res.status(400).send(e)
