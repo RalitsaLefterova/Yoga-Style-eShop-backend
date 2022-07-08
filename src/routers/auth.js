@@ -1,19 +1,17 @@
 const express = require('express')
-const auth = require('../middleware/auth')
-const { OAuth2Client } = require('google-auth-library')
-const User = require('../models/user')
-const Product = require('../models/product')
 
+const { OAuth2Client } = require('google-auth-library')
+const client = new OAuth2Client(process.env.CLIENT_ID)
+
+const auth = require('../middleware/auth')
+const User = require('../models/user')
 const { sendWelcomeEmail } = require('../emails/accounts')
 const { getUserShortInfo } = require('../utils/user-utils')
 
 const router = new express.Router()
 
-const client = new OAuth2Client(process.env.CLIENT_ID)
-
 // Sign-up
 router.post('/sign-up', async (req, res) => {
-  // console.log('in sign up')
   const user = new User(req.body)
   
   try {
@@ -22,7 +20,6 @@ router.post('/sign-up', async (req, res) => {
     const token = await user.generateAuthToken()
     res.status(201).send({ user, token })
   } catch (error) {
-    console.log(error.name)
     let errorMessage = error
     if (error.name == 'MongoServerError' && error.code === 11000) {
       errorMessage = 'User with this email already exists'
@@ -37,12 +34,12 @@ router.post('/sign-up', async (req, res) => {
 // Login
 router.post('/login', async (req, res) => {
   try {
-    const userInfo = await User.findByCredentials(req.body.email, req.body.password)
-    const token = await userInfo.generateAuthToken()
-    const user = getUserShortInfo(userInfo)
-    const cart = await userInfo.getCartDetails()
+    const user = await User.findByCredentials(req.body.email, req.body.password)
+    const userShortInfo = await getUserShortInfo(user._id)
+    const token = await user.generateAuthToken()
+    const cart = await user.getCartDetails()
     
-    res.send({ user, token, cart })
+    res.send({ user: userShortInfo, token, cart })
   } catch (error) {
     res.status(400).send(error.message)
   }
@@ -51,9 +48,9 @@ router.post('/login', async (req, res) => {
 // Login with Google
 router.post('/googlelogin', async (req, res) => {
   const { tokenId } = req.body
-  let email_verified = false
-  let email = ''
-  let fullName = ''
+  let email_verified = false,
+      email = '',
+      fullName = ''
   
   // We need to varify the token we send from the client side 
   // and the token we are using in the backend are the same or not
@@ -89,13 +86,12 @@ router.post('/googlelogin', async (req, res) => {
       await user.save()
       sendWelcomeEmail(user.email, user.fullName)
       const token = await user.generateAuthToken()
-      const userShortInfo = getUserShortInfo(user)
+      const userShortInfo = await getUserShortInfo(user._id)
       const cart = []
 
       res.status(201).send({ user: userShortInfo, token, cart })
-    } catch (e) {
-      res.status(400).send(e)
-      
+    } catch (error) {
+      res.status(400).send(error)
     }
     return
   } 
@@ -103,13 +99,12 @@ router.post('/googlelogin', async (req, res) => {
   // User exist in DB
   try {
     const token = await user.generateAuthToken()
-    const userShortInfo = getUserShortInfo(user)
+    const userShortInfo = await getUserShortInfo(user._id)
     const cart = await user.getCartDetails()
     
     res.send({ user: userShortInfo, token, cart })
-  } catch (e) {
-    console.log({e})
-    res.status(400).send(e)
+  } catch (error) {
+    res.status(400).send(error)
   }
 
 })

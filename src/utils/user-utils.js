@@ -1,21 +1,5 @@
-exports.getUserShortInfo = (userInfo) => {
-  const {
-    _id,
-    fullName,
-    email,
-    phone,
-    birthday,
-    language,
-    currency
-  } = userInfo
+const User = require('../models/user')
 
-  return {
-    _id,
-    fullName,
-    email,
-    phone,
-    birthday,
-    language,
-    currency
-  }
+exports.getUserShortInfo = (userId) => {
+  return User.findById(userId, 'fullName birthday language currency')
 }

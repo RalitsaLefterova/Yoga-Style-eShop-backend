@@ -1,6 +1,7 @@
 const express = require('express')
 const auth = require('../middleware/auth')
 const User = require('../models/user')
+const Product = require('../models/product')
 
 const router = new express.Router()
 
@@ -10,15 +11,12 @@ router.patch('/add/:productId', auth, async (req, res) => {
 
   try {
     const existingProduct = req.user.cart.find(product => product.productId.equals(productId))
+    const productInfo = await Product.findById(productId, 'title price mainImageUrl').exec()
 
-    if (existingProduct) {
-      existingProduct.quantity += 1
-    } else {
-      req.user.cart.push({ productId: productId, quantity: 1})
-    }
+    existingProduct ? existingProduct.quantity += 1 : req.user.cart.push({ productId: productId, quantity: 1})
 
     await req.user.save()
-    res.send(req.user)
+    res.send(productInfo)
   } catch(error) {
     res.send(error)
   }
@@ -26,17 +24,11 @@ router.patch('/add/:productId', auth, async (req, res) => {
 
 // Remove product from cart / Decrease quantity
 router.patch('/remove/:productId', auth, async (req, res) => {
-  console.log('Remove product from cart - req', req.params.productId)
-  console.log('cart', req.user.cart)
-
   const productId = req.params.productId
 
   try {
     const existingProduct = req.user.cart.find(product => product.productId.equals(productId))
     const productIndex = req.user.cart.indexOf(existingProduct)
-
-    console.log('existingProduct', existingProduct)
-    console.log('productIndex', productIndex)
 
     if (existingProduct && existingProduct.quantity === 1) {
       req.user.cart.splice(productIndex, 1)
@@ -45,11 +37,7 @@ router.patch('/remove/:productId', auth, async (req, res) => {
     }
 
     await req.user.save()
-
-    //TODO: decide whether to send all updated cart info or only a success message 
-
-    res.send(req.user)
-
+    res.send('Successfully decrease quantity of the product.')
   } catch(error) {
     res.send(error)
   }
@@ -57,22 +45,14 @@ router.patch('/remove/:productId', auth, async (req, res) => {
 
 // Clear product from cart
 router.patch('/clear/:productId', auth, async (req, res) => {
-  console.log('Clear product from cart - req', req.params.productId)
-
   const productId = req.params.productId
-
-  console.log('req.user.cart', req.user.cart)
   
   try {
     let updatedCartItems = req.user.cart.filter(product => !product.productId.equals(productId))
     req.user.cart = updatedCartItems
 
-    console.log('updatedCartItems', updatedCartItems)
-    console.log('req.user.cart', req.user.cart)
-
     await req.user.save()
-    res.send(req.user)    
-
+    res.send('Successfully remove product from cart.')    
   } catch(error) {
     res.send(error)
   }

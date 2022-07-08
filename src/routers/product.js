@@ -1,6 +1,7 @@
 const express = require('express')
 const path = require('path')
 const multer = require('multer')
+
 const auth = require('../middleware/auth')
 const FileHelper = require('../utils/files')
 const Collection = require('../models/collection')
@@ -55,32 +56,32 @@ router.post('/', auth, uploadProduct.single('mainImageUrl'), async (req, res, ne
 // GET /products?limit=10&skip20
 // GET /products?sortBy=createdAt:desc
 router.get('/', async (req, res) => {
-  const match = {}
   const sort = {}
   let searchOptions = {}
   
-  if (req.query.collectionTitle) {
-    const collection = await Collection.find({ title: req.query.collectionTitle })
-    
-    if (!collection) {
-      return res.status(404).send('collection not found')
+  try {
+
+    if (req.query.collectionTitle) {
+      const collection = await Collection.find({ title: req.query.collectionTitle })
+      
+      if (!collection) {
+        return res.status(404).send('collection not found')
+      }
+
+      searchOptions = { collectionId: collection[0]._id } 
     }
 
-    searchOptions = { collectionId: collection[0]._id } 
-  }
+    if (req.query.active) {
+      searchOptions.active = req.query.active
+    }
 
-  // if (req.query.active) {
-  //   match.active = req.query.active === 'true'
-  // }
+    if (req.query.sortBy) {
+      const parts = req.query.sortBy(split(':'))
+      sort[parts[0]] = parts[1] === 'desc' ? -1 : 1
+    }
 
-  // if (req.query.sortBy) {
-  //   const parts = req.query.sortBy(split(':'))
-  //   sort[parts[0]] = parts[1] === 'desc' ? -1 : 1
-  // }
+    const products = await Product.find(searchOptions, 'title price stock mainImageUrl collectionId active')
 
-  try {
-    const products = await Product.find(searchOptions)
-    console.log({products})
     res.send(products)
   } catch (e) {
     res.status(500).send(e)
@@ -89,12 +90,8 @@ router.get('/', async (req, res) => {
 
 // Edit product (Admin)
 router.patch('/:id', auth, uploadProduct.single('mainImageUrl'), async (req, res) => {
-  // console.log('in Edit product req.body', req.body)
-  // console.log('in Edit product req.file', req.file)
-
-  if (req.file) { 
-    req.body.mainImageUrl = FileHelper.createFilePath(req.file.path)
-  }
+  
+  req.file && (req.body.mainImageUrl = FileHelper.createFilePath(req.file.path))
 
   const updates = Object.keys(req.body)
   const allowedUpdates = ['title', 'description', 'price', 'stock', 'active', 'mainImageUrl', 'collectionId']
@@ -103,24 +100,21 @@ router.patch('/:id', auth, uploadProduct.single('mainImageUrl'), async (req, res
   if (!isValidOperation) {
     return res.status(400).send({ error: 'Invalid operation!'})
   }
-
+  
   try {
     const product = await Product.findOne({ _id: req.params.id})
-    if (!product) {
-      return res.status(404).send()
-    }
-    // console.log('req.body', req.body)
-    // console.log('product ====>', product)
 
-    if (req.file) {
-      FileHelper.deleteFile(product.mainImageUrl)
-    }
+    !product && res.status(404).send()
 
+    req.file && FileHelper.deleteFile(product.mainImageUrl)
+    
     updates.forEach((update) => product[update] = req.body[update])
 
     await product.save()
-    res.send(product)
 
+    // Always return product info instead of success message 
+    // because the response is used also to update a record in admin product table
+    res.send(product)
   } catch (e) {
     res.status(500).send(e)
   }
@@ -128,18 +122,25 @@ router.patch('/:id', auth, uploadProduct.single('mainImageUrl'), async (req, res
 
 // Get product by id
 router.get('/:id', async (req, res) => {
-  // console.log('get product by id', req.params.id)
-  // console.log('req.file', req.file)
-  const _id = req.params.id
-  // console.log('_id', _id)
+  const isEdit = req.query.edit
+  let responseObj = {}
 
   try {
-    const product = await Product.findById(_id)
-    // console.log('product res', product)
-    if (!product) {
-      return res.status(404).send()
+    const product = await Product.findById(
+      req.params.id, 
+      'active collectionId description mainImageUrl price stock title'
+    )
+
+    !product && res.status(404).send()
+
+    if (isEdit) {
+      const collections = await Collection.find({}, 'title')
+      responseObj = { product, collections }
+    } else {
+      responseObj = product
     }
-    res.send(product)
+
+    res.send(responseObj)
   } catch (e) {
     res.status(500).send(e)
   }
@@ -152,8 +153,8 @@ router.delete('/:id', auth, async (req, res) => {
     if (!product) {
       return res.status(404).send()
     }
-    res.send(product)
-    // res.send('Product ssuccesfuly deleted!')
+    // res.send(product)
+    res.send('Product ssuccesfuly deleted!')
   } catch (e) {
     res.status(500).send(e)
   }

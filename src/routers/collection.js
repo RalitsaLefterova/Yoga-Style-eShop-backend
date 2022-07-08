@@ -49,22 +49,20 @@ router.post('/', auth, uploadCollection.single('cover'), async (req, res, next) 
 
 // Get all collections
 router.get('/', async (req, res) => {
-  let isShortInfo = !!req.query.short
+  let isShortInfo = !!req.query.short,
+      collections = []
+
   try {
-    const collections = await Collection.find({})
-    // console.log('collections', collections)
-    if (isShortInfo) {
-      let shortInfoCollection = []
-      collections.map(collection => {
-        shortInfoCollection.push({
-          title: collection.title,
-          _id: collection._id
-        })
-      })
-      res.send(shortInfoCollection)
-    } else {
-      res.send(collections)
-    }
+    const collectionsDetailedInfo = await Collection.find({})
+    
+    isShortInfo
+      ? collections = collectionsDetailedInfo.reduce(
+        (accumulator, collection) => 
+          accumulator.concat({ _id: collection._id, title: collection.title }), 
+        []) 
+      : collections = collectionsDetailedInfo
+
+    res.send(collections)
   } catch (e) {
     res.status(500).send(e)
   }
