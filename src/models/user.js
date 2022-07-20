@@ -159,13 +159,16 @@ userSchema.methods.getCartDetails = async function() {
   try {
     const resultOfPopulation = await this.populate({
       path: 'cart.productId',
-      select: 'title price mainImageUrl'
+      select: 'title price mainImageUrl collectionId'
     })
 
     let populatedCart = resultOfPopulation.cart.toObject()
 
+    console.log({populatedCart})
+
     if (populatedCart.length > 0) {
       cart = populatedCart.map(item => {
+        console.log({item})
         return { ...item.productId, quantity: item.quantity }
       })
     }    
