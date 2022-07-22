@@ -3,15 +3,16 @@ const multer = require('multer')
 const sharp = require('sharp')
 const auth = require('../middleware/auth')
 const User = require('../models/user')
+
 const { sendCancelationEmail } = require('../emails/accounts')
-const { findById } = require('../models/user')
+const { getUserProfileInfo } = require('../utils/user-utils')
 
 const router = new express.Router()
 
 // GET user profile
 router.get('/me', auth, async (req, res) => {
-  // console.log('req.user', req.user)
-  res.send(req.user)
+  let userProfileInfo = await getUserProfileInfo(req.user._id)
+  res.send(userProfileInfo)
 })
 
 router.get('/', auth, async (req, res) => {
@@ -73,6 +74,7 @@ router.patch('/me', auth, async (req, res) => {
     // console.log('step 2 updated req.user.addresses', req.user.addresses)
     await req.user.save()
     // console.log('step 3', req.user)
+
     res.send(req.user)
   } catch (e) {
     // console.log('step 4 - error', e)

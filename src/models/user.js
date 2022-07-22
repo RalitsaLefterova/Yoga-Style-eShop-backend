@@ -20,6 +20,27 @@ const itemSchema = new mongoose.Schema({
   timestamps: true
 })
 
+const addressSchema = new mongoose.Schema({
+  street: { 
+    type: String, 
+    // required: 'Street is required' 
+  },
+  city: { 
+    type: String, 
+    // required: 'City is required' 
+  },
+  postalCode: { 
+    type: String, 
+    // required: 'Postal Code is required' 
+  },
+  country: { 
+    type: String, 
+    // required: 'Country is required' 
+  }
+})
+
+const Address = mongoose.model('Address', addressSchema)
+
 const userSchema = new mongoose.Schema({
   fullName: {
     type: String,
@@ -49,26 +70,15 @@ const userSchema = new mongoose.Schema({
       }
     }
   },
-  addresses: [{
-    isShippingAddress: Boolean,
-    isBillingAddress: Boolean,
-    street: String,
-    city: String,
-    postalCode: String,
-    country: String
-  }],
-  // shippingAddress: {
-  //   street: {type: String, required: 'Street is required'},
-  //   city: {type: String, required: 'City is required'},
-  //   zipcode: {type: String, required: 'Zip Code is required'},
-  //   country: {type: String, required: 'Country is required'}
-  // },
-  // billingAddress: {
-  //   street: {type: String, required: 'Street is required'},
-  //   city: {type: String, required: 'City is required'},
-  //   zipcode: {type: String, required: 'Zip Code is required'},
-  //   country: {type: String, required: 'Country is required'}
-  // },
+  addresses: [addressSchema],
+  shippingAddress: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Address",
+  },
+  billingAddress: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Address",
+  },
   birthday: {
     type: Date
   },
