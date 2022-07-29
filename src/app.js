@@ -9,6 +9,7 @@ const collectionRouter = require('./routers/collection')
 const productRouter = require('./routers/product')
 const cartRouter = require('./routers/cart')
 const orderRouter = require('./routers/order')
+const addressRouter = require('./routers/address')
 
 const app = express()
 
@@ -24,6 +25,7 @@ app.use('/collections', collectionRouter)
 app.use('/products', productRouter)
 app.use('/cart', cartRouter)
 app.use('/orders', orderRouter)
+app.use('/address', addressRouter)
 
 app.use('*', (req, res) => {
   res.status(404).json({

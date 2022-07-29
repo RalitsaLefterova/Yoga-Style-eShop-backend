@@ -2,44 +2,10 @@ const mongoose = require('mongoose')
 const validator = require('validator')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
+
 const Order = require('./order')
-
-const itemSchema = new mongoose.Schema({
-  productId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Product",
-  },
-  quantity: {
-    type: Number,
-    required: true,
-    min: [1, 'Quantity can not be less then 1.']
-  }
-}, {
-  _id : false
-}, {
-  timestamps: true
-})
-
-const addressSchema = new mongoose.Schema({
-  street: { 
-    type: String, 
-    // required: 'Street is required' 
-  },
-  city: { 
-    type: String, 
-    // required: 'City is required' 
-  },
-  postalCode: { 
-    type: String, 
-    // required: 'Postal Code is required' 
-  },
-  country: { 
-    type: String, 
-    // required: 'Country is required' 
-  }
-})
-
-const Address = mongoose.model('Address', addressSchema)
+const Address = require('./address')
+const { cartItemSchema } = require('./cart-item')
 
 const userSchema = new mongoose.Schema({
   fullName: {
@@ -70,14 +36,16 @@ const userSchema = new mongoose.Schema({
       }
     }
   },
-  addresses: [addressSchema],
+  addresses: [Address.schema],
   shippingAddress: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Address",
+    default: null
   },
   billingAddress: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Address",
+    default: null
   },
   birthday: {
     type: Date
@@ -102,19 +70,13 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: 'EN'
   },
-  cart: [itemSchema],
+  cart: [cartItemSchema],
   resetLink: {
     data: String,
     default: ''
   }
 }, {
   timestamps: true
-})
-
-itemSchema.virtual('products', {
-  ref: 'Product',
-  localField: 'productId',
-  foreignField: 'id'
 })
 
 userSchema.virtual('orders', {

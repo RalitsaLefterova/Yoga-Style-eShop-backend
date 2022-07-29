@@ -40,45 +40,28 @@ router.get('/:id', async (req, res) => {
 
 // USER: Update profile
 router.patch('/me', auth, async (req, res) => {
-  // console.log('req.body', req.body)
   const updates = Object.keys(req.body)
-  const allowedUpdates = ['fullName', 'email', 'password', 'birthday', 'address', 'phone', 'language', 'currency']
+  const allowedUpdates = [
+    'fullName', 
+    'email', 
+    'password', 
+    'birthday', 
+    'phone', 
+    'language', 
+    'currency', 
+    'shippingAddress', 
+    'billingAddress'
+  ]
   const isValidOperation = updates.every((update) => allowedUpdates.includes(update))
-  // console.log('isValidOperation', isValidOperation)
-  if (!isValidOperation) {
-    return res.status(400).send({ error: 'Invalid operation!'})
-  }
-  // console.log('step 1')
+
+  !isValidOperation && res.status(400).send({ error: 'Invalid operation!'})
+
   try {
-    updates.forEach((update) => {
-      if (update == 'address') {
-        // console.log('user addresses => ', req.user.addresses)
-        // console.log('req.body[update] => ', req.body[update])
-        
-        const existedAddress = req.user.addresses.id(req.body[update]._id)
-        
-        // console.log('existedAddress', existedAddress)
-        
-        if (existedAddress) {
-          
-          existedAddress.set(req.body[update])
-
-        } else {
-          req.user.addresses.push(req.body[update])
-        }
-      } else {
-        req.user[update] = req.body[update]
-      }
-      
-    })
-    // console.log('step 2 updated req.user.addresses', req.user.addresses)
+    updates.forEach((update) => req.user[update] = req.body[update])
     await req.user.save()
-    // console.log('step 3', req.user)
-
     res.send(req.user)
-  } catch (e) {
-    // console.log('step 4 - error', e)
-    res.status(500).send(e)
+  } catch (error) {
+    res.status(500).send(error)
   }
 })
 
@@ -109,11 +92,10 @@ router.patch('/:id', async (req, res) => {
 
 // USER: Delete profile
 router.delete('/me', auth, async (req, res) => {
-  console.log(req.user)
   try {
     await req.user.remove()
     // await User.deleteOne({ _id: req.user._id })
-    sendCancelationEmail(req.user.email, req.user.name)
+    sendCancelationEmail(req.user.email, req.user.fullName)
     res.send(req.user)
   } catch (e) {
     res.status(500).send(e)
@@ -148,6 +130,7 @@ const upload = multer({
 })
 
 // Upload avatar
+// TODO: Do I need that? Use update profile instead!
 router.post('/me/avatar', auth, upload.single('avatar'), async (req, res) => {
   const buffer = await sharp(req.file.buffer).resize({ width: 250, height: 250 }).png().toBuffer()
   req.user.avatar = buffer
