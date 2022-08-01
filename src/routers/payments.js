@@ -7,7 +7,7 @@ const router = new express.Router()
 
 router.post('/', auth, async (req, res) => {
   try {
-    console.log({stripe})
+    console.log({stripe}, 'req.body', req.body)
 
     const amount = req.body.amount
     // const currency = req.user.currency
@@ -15,7 +15,8 @@ router.post('/', auth, async (req, res) => {
     const paymentIntent = await stripe.paymentIntents.create({
       amount,
       currency: 'eur',
-      payment_method_types: ['card']
+      payment_method_types: ['card'],
+      description: 'Description here...'
     })
 
     res.send(paymentIntent)
