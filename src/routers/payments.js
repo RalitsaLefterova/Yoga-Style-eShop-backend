@@ -7,14 +7,13 @@ const router = new express.Router()
 
 router.post('/', auth, async (req, res) => {
   try {
-    console.log({stripe}, 'req.body', req.body)
 
     const amount = req.body.amount
-    // const currency = req.user.currency
+    const currency = req.user.currency
     
     const paymentIntent = await stripe.paymentIntents.create({
       amount,
-      currency: 'eur',
+      currency,
       payment_method_types: ['card'],
       description: 'Description here...'
     })

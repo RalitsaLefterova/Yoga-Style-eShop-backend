@@ -6,19 +6,19 @@ const addressSchema = new mongoose.Schema({
   },
   street: { 
     type: String, 
-    // required: 'Street is required' 
+    required: 'Street is required' 
   },
   city: { 
     type: String, 
-    // required: 'City is required' 
+    required: 'City is required' 
   },
   postalCode: { 
     type: String, 
-    // required: 'Postal Code is required' 
+    required: 'Postal Code is required' 
   },
   country: { 
     type: String, 
-    // required: 'Country is required' 
+    required: 'Country is required' 
   }
 })
 

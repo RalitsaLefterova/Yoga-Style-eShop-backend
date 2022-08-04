@@ -6,8 +6,7 @@ const orderSchema = new mongoose.Schema({
     product: { 
       // We need more than id for the product, because we need history for the orders
       // in case the product will be deleted in the future
-      type: Object,
-      required: true
+      type: Object
     },
     quantity: {
       type: Number,
@@ -30,10 +29,10 @@ const orderSchema = new mongoose.Schema({
   },
   payment_id: {},
   delivery_address: {
-    street: {type: String, required: 'Street is required'},
-    city: {type: String, required: 'City is required'},
-    zipcode: {type: String, required: 'Zip Code is required'},
-    country: {type: String, required: 'Country is required'}
+    street: String,
+    city: String,
+    postalCode: String,
+    country: String
   }
 }, {
   timestamps: true

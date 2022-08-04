@@ -3,35 +3,53 @@ const auth = require('../middleware/auth')
 const Order = require('../models/order')
 const User = require('../models/user')
 const Product = require('../models/product')
+const Address = require('../models/address')
+const { isValidObjectId } = require('mongoose')
 
 const router = new express.Router()
 
 // Create order (User)
 router.post('/', auth, async (req, res) => {
-  
-  let products = req.user.cart
-  // TODO: Reconstruct it to fit Order model's requirements.
-
-  const order = new Order({
-    // We can use entire user object and mongoose will pick the '_id' from there.
-    owner: req.user,
-    products: products,
-    status: 'Pending',
-    delivery_address: req.user.shippingAddress,
-    total: req.body.total
-  })
-
-  //TODO: Send email to thank the user for the new order
+  let cartProducts = req.user.cart
 
   try {
+    const products = await Promise.all(cartProducts.map(async (product) => {
+      return {
+        product: (await Product.find({ _id : product.productId}, 'title mainImageUrl price'))[0],
+        quantity: product.quantity
+      }
+    }))
+
+    const address = await req.user.addresses.id(req.user.shippingAddress)
+
+    const delivery_address = {
+      street: address.street,
+      city: address.city,
+      postalCode: address.postalCode,
+      country: address.country
+    }
+    
+    const order = new Order({
+      owner: req.user._id,
+      products,
+      status: 'Pending',
+      delivery_address,
+      total: req.body.total
+    })
     await order.save()
-    res.status(201).send('order created')
+    
+    req.user.cart = []
+    await req.user.save()
+
+    //TODO: Send email to thank the user for the new order
+    res.status(201).send('Order created')
   } catch (error) {
     res.send(error)
   }
 })
 
-// Update order (Admin)
+// Update order 
+// (Responsible person: Admin or member of the staff of the company.)
 router.patch('/:id', auth, async (req, res) => {
 
   //TODO: Change order's status ( 'In progress'/ 'Dispatched for delivery' / 'Finnished' / 'Canceled' )

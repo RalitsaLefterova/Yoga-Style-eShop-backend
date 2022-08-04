@@ -3,6 +3,7 @@ const multer = require('multer')
 const sharp = require('sharp')
 const auth = require('../middleware/auth')
 const User = require('../models/user')
+const Order = require('../models/order')
 
 const { sendCancelationEmail } = require('../emails/accounts')
 const { getUserProfileInfo } = require('../utils/user-utils')
@@ -11,8 +12,9 @@ const router = new express.Router()
 
 // GET user profile
 router.get('/me', auth, async (req, res) => {
-  let userProfileInfo = await getUserProfileInfo(req.user._id)
-  res.send(userProfileInfo)
+  const userProfileInfo = await getUserProfileInfo(req.user._id)
+  const orders = await Order.find({ owner: req.user._id})
+  res.send({ user: userProfileInfo, orders: orders })
 })
 
 router.get('/', auth, async (req, res) => {
