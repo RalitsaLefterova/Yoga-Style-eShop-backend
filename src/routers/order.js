@@ -51,7 +51,7 @@ router.post('/', auth, async (req, res) => {
 // Update order 
 // (Responsible person: Admin or member of the staff of the company.)
 router.patch('/:id', auth, async (req, res) => {
-
+  console.log('req.body', req.body)
   //TODO: Change order's status ( 'In progress'/ 'Dispatched for delivery' / 'Finnished' / 'Canceled' )
   
   //TODO: Send email to the user with updated status
@@ -63,10 +63,10 @@ router.patch('/:id', auth, async (req, res) => {
 
 
 
-// Get all orders
-// GET /tasks?completed=true
-// GET /tasks?limit=10&skip=20
-// GET /tasks?sortBy=createdAt:desc
+// Get all orders (ADMIN)
+// GET /orders?completed=true
+// GET /orders?limit=10&skip=20
+// GET /orders?sortBy=createdAt:desc
 router.get('/', auth, async (req, res) => {
   const match = {}
   const sort = {}
@@ -81,10 +81,14 @@ router.get('/', auth, async (req, res) => {
   }
 
   try {
-    const orders = await Order.find({ owner: req.user._id })
+    const orders = await Order.find({}, 'owner status createdAt').populate({
+      path: 'owner',
+      select: 'fullName'
+    })
+   
     res.send(orders)
 
-    // Variant with populate
+    // Variant with populate for one user (Remove from here!)
     // await req.user.populate({
     //   path: 'orders',
     //   match,
@@ -99,6 +103,20 @@ router.get('/', auth, async (req, res) => {
     
   } catch (error) {
     res.status(500).send(error)
+  }
+})
+
+// Get order details
+router.get('/:id', auth, async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id).populate({
+      path: 'owner',
+      select: 'fullName'
+    })
+    
+    res.send(order)
+  } catch (error) {
+    res.send(error)
   }
 })
 

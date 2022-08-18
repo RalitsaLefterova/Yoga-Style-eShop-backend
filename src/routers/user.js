@@ -12,17 +12,22 @@ const router = new express.Router()
 
 // GET user profile
 router.get('/me', auth, async (req, res) => {
-  const userProfileInfo = await getUserProfileInfo(req.user._id)
-  const orders = await Order.find({ owner: req.user._id})
-  res.send({ user: userProfileInfo, orders: orders })
+  try {
+    const userProfileInfo = await getUserProfileInfo(req.user._id)
+    const orders = await Order.find({ owner: req.user._id})
+    res.send({ user: userProfileInfo, orders: orders })
+  } catch (error) {
+    res.send(error)
+  }
+  
 })
 
 router.get('/', auth, async (req, res) => {
   try {
     const users = await User.find({})
     res.send(users)
-  } catch (e) {
-    res.status(500).send(e)
+  } catch (error) {
+    res.status(500).send(error)
   }
 })
 
