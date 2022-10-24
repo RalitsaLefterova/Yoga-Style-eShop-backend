@@ -21,6 +21,7 @@ app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')))
 app.use(express.json())
 app.use(cors({
   origin: process.env.FRONTEND_URL,
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
   optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
 }))
 
