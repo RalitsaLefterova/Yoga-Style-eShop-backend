@@ -15,8 +15,8 @@ const paymentsRouter = require('./routers/payments')
 const app = express()
 
 // app.set('publicDirectory', `${__dirname}/../public`)
-app.use(express.static(__dirname))
-// app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')))
+// app.use(express.static(__dirname))
+app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')))
 
 app.use(express.json())
 app.use(cors())
