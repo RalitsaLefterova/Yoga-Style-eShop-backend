@@ -20,14 +20,8 @@ app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')))
 
 app.use(express.json())
 app.use(cors({
-  // "origin": "*",
-  origin: [process.env.FRONTEND_URL],
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
-  credentials: true,
-  "Access-Control-Allow-Origin": "*"
-  // "preflightContinue": false,
-  // "optionsSuccessStatus": 204
-  // optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Credentials": "include"
 }))
 
 app.use('/auth', authRouter)
