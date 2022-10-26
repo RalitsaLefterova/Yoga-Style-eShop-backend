@@ -20,8 +20,11 @@ app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')))
 
 app.use(express.json())
 app.use(cors({
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Credentials": "include"
+  "origin": "https://yoga-style-eshop.netlify.app",
+  "methods": "GET,HEAD,PUT,POST,PATCH,DELETE",
+  "allowedHeaders": ['Content-Type', 'Authorization'],
+  "credentials": true,
+  "preflightContinue": true
 }))
 
 app.use('/auth', authRouter)
