@@ -23,8 +23,7 @@ app.use(cors({
   // "origin": "*",
   origin: [process.env.FRONTEND_URL],
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
-  credentials: true,
-  origin: true
+  credentials: true
   // "preflightContinue": false,
   // "optionsSuccessStatus": 204
   // optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
