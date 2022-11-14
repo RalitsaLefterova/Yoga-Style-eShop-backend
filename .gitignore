@@ -2,3 +2,4 @@ node_modules
 config
 uploads
 uploads_old
+ecosystem.config.js

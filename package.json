@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Yoga Style eShop - Backend",
   "scripts": {
-    "prod": "env-cmd -f ./config/dev.env node src/index.js",
+    "prod": "node src/index.js",
     "dev": "env-cmd -f ./config/dev.env nodemon src/index.js",
     "test": "env-cmd -f ./config/test.env jest --watch --runInBand"
   },
