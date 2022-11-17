@@ -4,7 +4,8 @@ module.exports = shipit => {
 
   shipit.initConfig({
     default: {
-      deployTo: '/Yoga-Style-eShop-backend',
+      branch: 'main',
+      deployTo: '/root/Yoga-Style-eShop-backend',
       repositoryUrl: 'git@github.com:RalitsaLefterova/Yoga-Style-eShop-backend.git',
       keepReleases: 5,
       shared: {
