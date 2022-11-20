@@ -9,7 +9,7 @@ module.exports = shipit => {
       deployTo: '/root/Yoga-Style-eShop-backend',
       repositoryUrl: 'git@github.com:RalitsaLefterova/Yoga-Style-eShop-backend.git',
       keepReleases: 5,
-      shallowClone: true,
+      // shallowClone: true,
       shared: {
         overwrite: true,
         dirs: ['node_modules']
