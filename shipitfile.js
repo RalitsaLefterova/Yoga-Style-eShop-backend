@@ -15,6 +15,10 @@ module.exports = shipit => {
         dirs: ['node_modules']
       }
     },
+    dev: {
+      branch: 'development',
+      servers: 'root@172.104.251.14'
+    },
     staging: {
       servers: 'root@172.104.251.14'
     }
@@ -23,6 +27,22 @@ module.exports = shipit => {
   shipit.blTask('npm:install', async () => {
     await shipit.remote(`cd ${shipit.releasePath} && npm install`);
   })
+
+  shipit.blTask('server:copyConfig', async () => {
+    shipit.log('copying ecosystem.config.js file :: >>>>> ')
+    await shipit.local(`scp mnt/d/Projects-wip/Yoga-Style-eShop-backend/ecosystem.config.js ${shipit.releasePath}`);
+  })
+
+  // shipit.blTask('server:start', async () => {
+  //   await shipit.remote(`pm2 delete -s api-yoga-style || :`);
+  //   const command = `pm2 start --name api-yoga-style ${shipit.currentPath}/src/index.js ecosystem.config.js --env production`;
+  //   await shipit.remote(`cd ${shipit.config.deployTo} && ${command}`);
+  // })
+
+  // shipit.blTask('server:restart', async () => {
+  //   const command = 'pm2 restart all';
+  //   await shipit.remote(`cd ${shipit.config.deployTo} && ${command}`);
+  // })
 
   shipit.on('init', function () {
     shipit.log('---------------1------------------');
@@ -34,11 +54,13 @@ module.exports = shipit => {
 
   shipit.on('updated', function () {
     shipit.log('---------------3------------------');
-    shipit.start('npm:install')
+    shipit.start('npm:install');
+    shipit.start('server:copyConfig');
   });
 
   shipit.on('published', function () {
     shipit.log('---------------4------------------');
+    // shipit.start('server:restart');
   });
 
   shipit.on('cleaned', function () {
