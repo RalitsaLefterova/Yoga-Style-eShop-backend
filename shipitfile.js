@@ -15,7 +15,7 @@ module.exports = shipit => {
         dirs: ['node_modules']
       }
     },
-    production: {
+    staging: {
       servers: 'root@172.104.251.14'
     }
   });
