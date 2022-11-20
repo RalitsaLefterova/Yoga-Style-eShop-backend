@@ -48,6 +48,10 @@ module.exports = shipit => {
     shipit.log('---------------6------------------');
   });
 
+  shipit.on('updated', () => {
+    shipit.start('npm:install')
+  })
+
 
 
 
