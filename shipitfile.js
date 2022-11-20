@@ -30,7 +30,7 @@ module.exports = shipit => {
 
   shipit.blTask('server:copyConfig', async () => {
     shipit.log('copying ecosystem.config.js file :: >>>>> ')
-    await shipit.local(`scp mnt/d/Projects-wip/Yoga-Style-eShop-backend/ecosystem.config.js ${shipit.releasePath}`);
+    await shipit.local(`scp mnt/d/Projects-wip/Yoga-Style-eShop-backend/ecosystem.config.js root@172.104.251.14:/${shipit.releasePath}`);
   })
 
   // shipit.blTask('server:start', async () => {
