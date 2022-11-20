@@ -34,6 +34,7 @@ module.exports = shipit => {
 
   shipit.on('updated', function () {
     shipit.log('---------------3------------------');
+    shipit.start('npm:install')
   });
 
   shipit.on('published', function () {
@@ -47,13 +48,5 @@ module.exports = shipit => {
   shipit.on('finish', function () {
     shipit.log('---------------6------------------');
   });
-
-  shipit.on('updated', () => {
-    shipit.start('npm:install')
-  })
-
-
-
-
 
 }
