@@ -11,9 +11,23 @@ module.exports = shipit => {
       deployTo: '/root/Yoga-Style-eShop-backend',
       repositoryUrl: 'git@github.com:RalitsaLefterova/Yoga-Style-eShop-backend.git',
       keepReleases: 5,
+      // shared: {
+      //   overwrite: true,
+      //   dirs: ['node_modules']
+      // }
       shared: {
-        overwrite: true,
-        dirs: ['node_modules']
+        dirs: [
+          {
+            path: 'node_modules',
+            overwrite: true,
+            chmod: '-R 777',
+          },
+          // {
+          //   path: 'uploads',
+          //   overwrite: false,
+          //   chmod: '-R 777',
+          // }
+        ]
       }
     },
     dev: {
@@ -31,6 +45,11 @@ module.exports = shipit => {
     'shared',
     'ecosystem.config.js'
   );
+  const uploadsFolderPath = path.join(
+    shipit.config.deployTo,
+    'shared',
+    'uploads'
+  );
 
   shipit.blTask('npm:install', async () => {
     await shipit.remote(`cd ${shipit.releasePath} && nvm use && npm install`);
@@ -47,6 +66,16 @@ module.exports = shipit => {
     await shipit.remote(`pm2 start ${shipit.currentPath}/src/index.js -n ${appName} ${ecosystemFilePath} --env production`);
   })
 
+  shipit.blTask('create-symlink', async () => {
+    // TODO first check if directory exists
+    await shipit.remote(`ln -s ${uploadsFolderPath} ${shipit.currentPath}`)
+  })
+
+  // shipit.blTask('server:restart', async () => {
+  //   const command = 'pm2 restart all';
+  //   await shipit.remote(`cd ${shipit.config.deployTo} && ${command}`);
+  // })
+
   shipit.on('init', function () {
     shipit.log('--------------- 1 Init------------------');
   });
@@ -57,7 +86,7 @@ module.exports = shipit => {
 
   shipit.on('updated', function () {
     shipit.log('--------------- 3 Updated ------------------');
-    shipit.start('npm:install', 'copy-config');
+    shipit.start('npm:install', 'copy-config', 'create-symlink');
   });
 
   shipit.on('published', function () {
@@ -69,9 +98,6 @@ module.exports = shipit => {
     shipit.start('pm2-server');
   });
 
-  // shipit.blTask('server:restart', async () => {
-  //   const command = 'pm2 restart all';
-  //   await shipit.remote(`cd ${shipit.config.deployTo} && ${command}`);
-  // })
+  
 
 }
