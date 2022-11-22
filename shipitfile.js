@@ -22,11 +22,11 @@ module.exports = shipit => {
             overwrite: true,
             chmod: '-R 777',
           },
-          // {
-          //   path: 'uploads',
-          //   overwrite: false,
-          //   chmod: '-R 777',
-          // }
+          {
+            path: 'uploads',
+            overwrite: true,
+            chmod: '-R 777',
+          }
         ]
       }
     },
@@ -86,7 +86,8 @@ module.exports = shipit => {
 
   shipit.on('updated', function () {
     shipit.log('--------------- 3 Updated ------------------');
-    shipit.start('npm:install', 'copy-config', 'create-symlink');
+    shipit.start('npm:install', 'copy-config');
+    // shipit.start('create-symlink');
   });
 
   shipit.on('published', function () {
