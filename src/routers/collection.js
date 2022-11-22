@@ -10,8 +10,8 @@ const router = new express.Router()
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    // cb(null, path.join(__dirname, '../..', '/uploads/collections'))
-    cb(null, 'uploads/collections')
+    cb(null, path.join(__dirname, '../..', '/uploads/collections'))
+    // cb(null, '/uploads/collections')
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now()
@@ -36,7 +36,9 @@ const uploadCollection = multer({
 // Create collection 
 router.post('/', auth, uploadCollection.single('cover'), async (req, res, next) => {
   const title = req.body.title
-  const cover = FileHelper.createFilePath(req.file.path)
+  console.log('------------ req.file ---------', req.file)
+  // const cover = FileHelper.createFilePath(req.file.filename)
+  const cover = req.file.filename
 
   const collection = new Collection({ title, cover })
 
