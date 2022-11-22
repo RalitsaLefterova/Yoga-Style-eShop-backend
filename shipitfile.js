@@ -68,7 +68,7 @@ module.exports = shipit => {
 
   shipit.blTask('create-symlink', async () => {
     // TODO first check if directory exists
-    await shipit.remote(`ln -s ${uploadsFolderPath} ${shipit.currentPath}`)
+    await shipit.remote(`ln -nfs ${uploadsFolderPath} ${shipit.releasePath}`)
   })
 
   // shipit.blTask('server:restart', async () => {
