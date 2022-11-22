@@ -5,7 +5,7 @@ const createFilePath = file => {
 }
 
 const deleteFile = (filePath) => {
-  fs.unlink(filePath.replace(`${process.env.BACKEND_URL}/`, ""), (err) => {
+  fs.unlink(filePath.replace(`${process.env.BACKEND_URL}`, ""), (err) => {
     if (err) {
       throw (err)
     }

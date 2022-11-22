@@ -23,7 +23,7 @@ module.exports = shipit => {
             chmod: '-R 777',
           },
           {
-            path: 'uploads',
+            path: 'uploads/collections',
             overwrite: true,
             chmod: '-R 777',
           }
