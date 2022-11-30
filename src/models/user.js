@@ -108,21 +108,15 @@ userSchema.methods.generateAuthToken = async function () {
 
 userSchema.statics.findByCredentials = async (email, password) => {
 
-  try {
-    const user = await User.findOne({ email })
-    const errorMessage = 'Invalid Credentials'
-
-    if (!user) throw new Error(errorMessage)
-
-    const isMatch = await bcrypt.compare(password, user.password)
-
-    if (!isMatch) throw new Error(errorMessage)
-
-    return user
+  const errorMessage = 'Invalid Credentials'
     
-  } catch(error) {
-    console.log({error})
-  }
+  const user = await User.findOne({ email })
+  if (!user) throw new Error(errorMessage)
+
+  const isMatch = await bcrypt.compare(password, user.password)
+  if (!isMatch) throw new Error(errorMessage)
+
+  return user
 }
 
 userSchema.methods.getCartDetails = async function() {
