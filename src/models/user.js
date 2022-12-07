@@ -59,6 +59,9 @@ const userSchema = new mongoose.Schema({
       required: true
     }
   }],
+  resetToken: {
+    type: String
+  },
   avatar: {
     type: Buffer
   },
@@ -96,13 +99,19 @@ userSchema.methods.toJSON = function () {
   return userObject
 }
 
-userSchema.methods.generateAuthToken = async function () {
+userSchema.methods.generateAuthToken = async function (isResetToken) {
   const user = this
-  const token = jwt.sign({ _id: user.id.toString() }, process.env.JWT_SECRET, { expiresIn: '8h' })
-  
-  user.tokens = user.tokens.concat({ token })
+  let token = ''
+
+  if (isResetToken) {
+    token = jwt.sign({ _id: user.id.toString() }, process.env.JWT_SECRET, { expiresIn: '30m' })
+    user.resetToken = token
+  } else {
+    token = jwt.sign({ _id: user.id.toString() }, process.env.JWT_SECRET, { expiresIn: '8h' })
+    user.tokens = user.tokens.concat({ token })
+  }
+
   await user.save()
-  
   return token
 }
 

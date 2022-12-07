@@ -5,7 +5,7 @@ const client = new OAuth2Client(process.env.CLIENT_ID)
 
 const auth = require('../middleware/auth')
 const User = require('../models/user')
-const { sendWelcomeEmail } = require('../emails/accounts')
+const { sendWelcomeEmail, sendPasswordResetEmail } = require('../emails/accounts')
 const { getUserShortInfo } = require('../utils/user-utils')
 
 const router = new express.Router()
@@ -134,7 +134,56 @@ router.post('/logoutall', auth, async (req, res) => {
   }
 })
 
-// Reset password
+// Forgot password
+router.post('/forgot-password', async (req, res) => {
+  try {
+    const user = await User.findOne({ email: req.body.email })
+
+    if (!user) return res.status(400).send("User with given email doesn't exist.")
+
+    user.tokens = []
+    
+    const isResetToken = true
+    const resetToken = await user.generateAuthToken(isResetToken)
+
+    const link = `${process.env.FRONTEND_URL}/reset-password?user=${user._id}&token=${resetToken}`
+
+    sendPasswordResetEmail(user.email, user.fullName, link)
+
+    res.send("Password reset link has been sent to your email account.")
+
+  } catch (error) {
+    res.send("An error occured")
+    console.log(error)
+  }
+})
+
+// Reset forgoten password
+router.post('/reset-password/:userId/:resetToken', async (req, res) => {
+  console.log('req.params', req.params, 'req.body', req.body)
+  try {
+    const user = await User.findById(req.params.userId)
+
+    if (!user) return res.status(400).send("invalid link or expired")
+
+    console.log('user.resetToken', user.resetToken,'req.params.token', req.params.resetToken)
+    const existingToken = user.resetToken === req.params.resetToken
+    if (!existingToken) return res.status(400).send("Invalid link or expired")
+    console.log({existingToken})
+
+    user.password = req.body.password
+    user.resetToken = ''
+
+    await user.save()
+    res.send("Password reset sucessfully.")
+
+  } catch (error) {
+    res.send(error.message);
+    console.log(error, error.message)
+  }
+})
+
+// Change password
 
 
 
