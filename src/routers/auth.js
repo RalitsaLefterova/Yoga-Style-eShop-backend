@@ -27,7 +27,7 @@ router.post('/sign-up', async (req, res) => {
     if (error.name == 'ValidationError') {
       // TODO Maybe remove this. Validations will be in the frontend.
     }
-    res.status(400).send(errorMessage)
+    res.status(400).send(error.message)
   }
 })
 
@@ -41,6 +41,7 @@ router.post('/login', async (req, res) => {
     
     res.send({ user: userShortInfo, token, cart })
   } catch (error) {
+    // console.log('error after search for user', email, error, error.message)
     res.status(400).send(error.message)
   }
 })

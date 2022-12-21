@@ -6,6 +6,7 @@ const jwt = require('jsonwebtoken')
 const Order = require('./order')
 const Address = require('./address')
 const { cartItemSchema } = require('./cart-item')
+const { UserRoles } = require('../utils/user-roles')
 
 const userSchema = new mongoose.Schema({
   fullName: {
@@ -74,9 +75,9 @@ const userSchema = new mongoose.Schema({
     default: 'EN'
   },
   cart: [cartItemSchema],
-  resetLink: {
-    data: String,
-    default: ''
+  role: {
+    type: String,
+    default: UserRoles.USER
   }
 }, {
   timestamps: true
@@ -118,8 +119,9 @@ userSchema.methods.generateAuthToken = async function (isResetToken) {
 userSchema.statics.findByCredentials = async (email, password) => {
 
   const errorMessage = 'Invalid Credentials'
-    
+  // console.log('before search for user', email)
   const user = await User.findOne({ email })
+  // console.log('after search for user', email, {user})
   if (!user) throw new Error(errorMessage)
 
   const isMatch = await bcrypt.compare(password, user.password)

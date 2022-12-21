@@ -1,9 +1,9 @@
 const User = require('../models/user')
 
 exports.getUserShortInfo = userId => {
-  return User.findById(userId, 'fullName birthday language currency')
+  return User.findById(userId, 'fullName birthday language currency role')
 }
 
 exports.getUserProfileInfo = userId => {
-  return User.findById(userId, 'fullName email phone birthday language currency addresses shippingAddress billingAddress')
+  return User.findById(userId, 'fullName email role phone birthday language currency addresses shippingAddress billingAddress')
 }

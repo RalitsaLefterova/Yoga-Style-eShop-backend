@@ -3,6 +3,7 @@ const path = require('path')
 const multer = require('multer')
 const sharp = require('sharp')
 const auth = require('../middleware/auth')
+const authAdmin = require('../middleware/auth-admin')
 const Collection = require('../models/collection')
 const FileHelper = require('../utils/files')
 
@@ -34,7 +35,7 @@ const uploadCollection = multer({
 })
 
 // Create collection 
-router.post('/', auth, uploadCollection.single('cover'), async (req, res, next) => {
+router.post('/', authAdmin, uploadCollection.single('cover'), async (req, res, next) => {
   const title = req.body.title
   console.log('------------ req.file ---------', req.file)
   // const cover = FileHelper.createFilePath(req.file.filename)
@@ -88,7 +89,7 @@ router.get('/:id', async (req, res) => {
 
 
 // Edit collection (Admin)
-router.patch('/:id', auth, uploadCollection.single('cover'), async (req, res) => {
+router.patch('/:id', authAdmin, uploadCollection.single('cover'), async (req, res) => {
   // console.log('in Edit collection req.body', req.body)
   // console.log('in Edit collection req.file', req.file)
   if (req.file) { 
@@ -127,7 +128,7 @@ router.patch('/:id', auth, uploadCollection.single('cover'), async (req, res) =>
 })
 
 // Delete collection (Admin)
-router.delete('/:id', auth, async (req, res) => {
+router.delete('/:id', authAdmin, async (req, res) => {
   try {
     const collection = await Collection.findOneAndDelete({ _id: req.params.id})
     if (!collection) {

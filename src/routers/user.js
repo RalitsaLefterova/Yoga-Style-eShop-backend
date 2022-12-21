@@ -2,6 +2,7 @@ const express = require('express')
 const multer = require('multer')
 const sharp = require('sharp')
 const auth = require('../middleware/auth')
+const authAdmin = require('../middleware/auth-admin')
 const User = require('../models/user')
 const Order = require('../models/order')
 
@@ -19,10 +20,9 @@ router.get('/me', auth, async (req, res) => {
   } catch (error) {
     res.send(error)
   }
-  
 })
 
-router.get('/', auth, async (req, res) => {
+router.get('/', authAdmin, async (req, res) => {
   try {
     const users = await User.find({})
     res.send(users)
@@ -73,7 +73,7 @@ router.patch('/me', auth, async (req, res) => {
 })
 
 // ADMIN: Update user profile
-router.patch('/:id', async (req, res) => {
+router.patch('/:id', authAdmin, async (req, res) => {
   const updates = Object.keys(req.body)
   const allowedUpdates = ['fullName', 'email', 'password', 'age']
   const isValidOperation = updates.every((update) => allowedUpdates.includes(update))
@@ -110,7 +110,7 @@ router.delete('/me', auth, async (req, res) => {
 })
 
 // ADMIN: delete user
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authAdmin, async (req, res) => {
   try {
     const user = await User.findById(req.params.id)
     if (!user) {
