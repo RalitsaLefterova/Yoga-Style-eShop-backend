@@ -1,5 +1,7 @@
 const mongoose = require('mongoose')
 
+const ProductColor = require('./product-color')
+
 const productSchema = new mongoose.Schema({
   title: {
     type: String,
@@ -12,20 +14,16 @@ const productSchema = new mongoose.Schema({
     type: Number,
     required: [true, 'Please Include the product price']
   },
+  mainImageUrl: {
+    type: String,
+    required: true
+  },
+  colors: [ProductColor.schema],
   stock: {
     type: Number,
     required: false,
     default: 0
   },
-  mainImageUrl: {
-    type: String,
-    required: true
-  },
-  images: [{
-    imageUrl: String,
-    color: String,
-    size: String
-  }],
   active: {
     type: Boolean,
     default: false

@@ -2,6 +2,7 @@ const express = require('express')
 const path = require('path')
 const multer = require('multer')
 const sharp = require('sharp')
+
 const auth = require('../middleware/auth')
 const authAdmin = require('../middleware/auth-admin')
 const Collection = require('../models/collection')
@@ -12,7 +13,6 @@ const router = new express.Router()
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, path.join(__dirname, '../..', '/uploads/collections'))
-    // cb(null, '/uploads/collections')
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now()

@@ -1,52 +1,25 @@
-const express = require('express')
-const path = require('path')
-const multer = require('multer')
+const express = require('express') 
 
 const auth = require('../middleware/auth')
+const authAdmin = require('../middleware/auth-admin')
+const { uploadProductImage, uploadMultipleImages } = require('../middleware/multer-config')
+
 const FileHelper = require('../utils/files')
-const Collection = require('../models/collection')
 const Product = require('../models/product')
+const Collection = require('../models/collection')
 
 const router = new express.Router()
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/products')
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now()
-    // Note: Multer does not add extensions to file names, and it’s recommended to return a filename complete with a file extension.
-    cb(null, 'product-' + req.body.title.replace(/\s+/g, '-').toLowerCase() + '-' + uniqueSuffix + path.extname(file.originalname))
-  }
-})
-
-const uploadProduct = multer({
-  storage,
-  limits: {
-    fileSize: 1000000
-  },
-  fileFilter(req, file, cb) {
-    if (!file.originalname.match(/\.(jpg|jpeg|png)$/)) {
-      return cb(new Error('Please upload jpg, jpeg or png.'))
-    }
-    cb(undefined, true)
-  }
-})
 
 // Create product
-router.post('/', auth, uploadProduct.single('mainImageUrl'), async (req, res, next) => {
-  const mainImageUrl = FileHelper.createFilePath(req.file.path)
-
+router.post('/', authAdmin, uploadProductImage.single('mainImageUrl'), async (req, res) => {
   const product = new Product({
     ...req.body,
-    mainImageUrl
+    mainImageUrl: `uploads/products/${req.file.filename}`
   })
-
   await product.save()
   res.send('product created')
-  
 }, (error, req, res, next) => {
-  console.log('error when create product', error)
   res.status(400).send({ error: error.message })
 })
 
@@ -88,10 +61,11 @@ router.get('/', async (req, res) => {
   }
 })
 
-// Edit product (Admin)
-router.patch('/:id', auth, uploadProduct.single('mainImageUrl'), async (req, res) => {
-  
-  req.file && (req.body.mainImageUrl = FileHelper.createFilePath(req.file.path))
+// Edit product (Admin) 
+router.patch('/:id', authAdmin, uploadProductImage.single('mainImageUrl'), async (req, res) => {
+  console.log('Edit product (Admin)', 'req.body', req.body)
+  console.log('------------ req.file ---------', req.file)
+  req.file && (req.body.mainImageUrl = `uploads/products/${req.file.filename}`)
 
   const updates = Object.keys(req.body)
   const allowedUpdates = ['title', 'description', 'price', 'stock', 'active', 'mainImageUrl', 'collectionId']
@@ -120,6 +94,109 @@ router.patch('/:id', auth, uploadProduct.single('mainImageUrl'), async (req, res
   }
 })
 
+// Add color to product
+router.post('/:productId/colors', authAdmin, async (req, res) => {
+  console.log('req.body', req.body)
+  
+  try {
+    const product = await Product.findOne({ _id: req.params.productId})
+    const doesColorExist = product.colors.find(color => {
+      console.log(color.color, req.body.color)
+      return color.color == req.body.color
+    })
+    console.log({doesColorExist})
+
+    if (doesColorExist) {
+      console.log('it exists')
+      const error = new Error('Color already exists.')
+      error.code = "422"
+      throw error
+    }
+
+    let colorObj = {}
+    colorObj.color = req.body.color
+    
+    
+    console.log('before save', {colorObj})
+    product.colors.push(colorObj)
+    await product.save()
+    res.send(product)
+  } catch (error) {
+    console.log({error}, error.message, error.code)
+    res.status(422).send(error.message)
+    // res.status(500).send(error.message)
+  }
+})
+
+// Edit color data
+// Data, that will be handled:
+//  color: String,
+//  images: String[], 
+//  sizes: [{ size: String, stock: Number}],
+router.patch('/:productId/colors/:colorId', authAdmin, uploadMultipleImages.array('images'), async (req, res) => {
+  console.log('files:', req.files)
+  console.log('body:', req.body)
+  console.log(req.params)
+
+  try {
+    const product = await Product.findOne({ _id: req.params.productId })
+    console.log({product})
+    const existingColor = product.colors.find(color => color._id.equals(req.params.colorId))
+    console.log({existingColor})
+    // const colorIndex = product.colors.indexOf(existingColor)
+    // console.log({colorIndex})
+
+    req.body.color && (existingColor.color = req.body.color)
+
+    req.files && req.files.map(file => {
+      console.log({file})
+      existingColor.images.push(file.filename)
+    })
+    existingColor.images.push()
+
+    req.body.sizes && (existingColor.sizes = req.body.sizes)
+
+    console.log('before save', {product})
+    await product.save()
+    res.send(product)
+  } catch (error) {
+    res.status(500).send(error.message)
+  }
+})
+
+// REMOVE ONE IMAGE FROM COLOR IMAGES
+router.patch('/:productId/colors/:colorId/image', authAdmin, async (req, res) => {
+  console.log('IN REMOVE ONE IMAGE FROM COLOR IMAGES')
+  console.log('body: ', req.body)
+  console.log('params: ', req.params)
+
+  try {
+    const product = await Product.findOne({ _id: req.params.productId })
+    // console.log({product})
+    const existingColor = product.colors.find(color => color._id.equals(req.params.colorId))
+    let colorImages = existingColor.images
+    
+    console.log('before: colorImages', colorImages)
+    // existingColor.images.map()
+    // console.log('after', {existingColor})
+
+    const imageIndex = colorImages.indexOf(req.body.imgUrl)
+    console.log({imageIndex})
+
+    colorImages.splice(imageIndex, 1)
+    console.log(`uploads/products/${req.params.productId}/${req.body.imgUrl}`)
+    FileHelper.deleteFile(`uploads/products/${req.params.productId}/${req.body.imgUrl}`)
+
+    console.log('product before saving', product)
+    await product.save()
+    res.send(product)
+  } catch (error) {
+    res.status(500).send(error.message)
+  }
+})
+
+
+
 // Get product by id
 router.get('/:id', async (req, res) => {
   const isEdit = req.query.edit
@@ -128,7 +205,7 @@ router.get('/:id', async (req, res) => {
   try {
     const product = await Product.findById(
       req.params.id, 
-      'active collectionId description mainImageUrl price stock title'
+      'active collectionId description mainImageUrl price stock title colors'
     )
 
     !product && res.status(404).send()
@@ -147,7 +224,7 @@ router.get('/:id', async (req, res) => {
 })
 
 // Delete product
-router.delete('/:id', auth, async (req, res) => {
+router.delete('/:id', authAdmin, async (req, res) => {
   try {
     const product = await Product.findOneAndDelete({ _id: req.params.id })
     if (!product) {

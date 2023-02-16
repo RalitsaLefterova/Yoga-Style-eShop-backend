@@ -21,7 +21,7 @@ const authAdmin = async (req, res, next) => {
     next()
     
   } catch (error) {
-    console.log('in authentication error', {error}, 'error.message', error.message)
+    // console.log('in authentication error', {error}, 'error.message', error.message)
     res.status(401).send(error.message)
   }
 }

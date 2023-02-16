@@ -1,5 +1,6 @@
 const express = require('express')
 const path = require('path')
+const fs = require('fs')
 const cors = require('cors')
 require('./db/mongoose')
 
@@ -19,6 +20,8 @@ const app = express()
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')))
 
 app.use(express.json())
+// app.use(express.urlencoded({extended: true}))
+
 app.use(cors({
   "origin": ["https://yoga-style-eshop.netlify.app", "http://localhost:3000"],
   "methods": "GET,HEAD,PUT,POST,PATCH,DELETE",
@@ -36,6 +39,9 @@ app.use('/orders', orderRouter)
 app.use('/address', addressRouter)
 app.use('/payment', paymentsRouter)
 
+app.use('/', (req, res) => {
+  res.send('Hello World!')
+})
 
 app.use('*', (req, res) => {
   res.status(404).json({
@@ -44,9 +50,5 @@ app.use('*', (req, res) => {
     msg: "The page you're looking for doesn't exist.",
   });
 });
-
-app.use('/', (req, res) => {
-  res.send('Hello World!')
-})
 
 module.exports = app
