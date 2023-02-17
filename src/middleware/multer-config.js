@@ -37,7 +37,7 @@ const uploadMultipleImagesStorage = multer.diskStorage({
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now()
     // Note: Multer does not add extensions to file names, and it’s recommended to return a filename complete with a file extension.
-    cb(null, 'product-' + req.params.productId + '-color-' + uniqueSuffix + path.extname(file.originalname))
+    cb(null, 'product-' + req.params.productId + '-' + uniqueSuffix + path.extname(file.originalname))
   }
 })
 

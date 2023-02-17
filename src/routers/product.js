@@ -23,7 +23,7 @@ router.post('/', authAdmin, uploadProductImage.single('mainImageUrl'), async (re
   res.status(400).send({ error: error.message })
 })
 
-// Get all products
+// GET ALL PRODUCTS
 // GET /products?collectionTitle=meditation%20and%20relaxasion
 // GET /products?active=true
 // GET /products?limit=10&skip20
@@ -33,10 +33,10 @@ router.get('/', async (req, res) => {
   let searchOptions = {}
   
   try {
-
+    // console.log('req.query', req.query)
     if (req.query.collectionTitle) {
-      const collection = await Collection.find({ title: req.query.collectionTitle })
-      
+      const collection = await Collection.find({ title: req.query.collectionTitle.toLowerCase() })
+      // console.log('collection', collection, req.query.collectionTitle.toLowerCase())
       if (!collection) {
         return res.status(404).send('collection not found')
       }
@@ -52,16 +52,16 @@ router.get('/', async (req, res) => {
       const parts = req.query.sortBy(split(':'))
       sort[parts[0]] = parts[1] === 'desc' ? -1 : 1
     }
-
-    const products = await Product.find(searchOptions, 'title price stock mainImageUrl collectionId active')
-
+    // console.log('searchOptions', searchOptions)
+    const products = await Product.find(searchOptions, 'title price stock mainImageUrl collectionId active colors')
+    // console.log('products', products)
     res.send(products)
   } catch (e) {
     res.status(500).send(e)
   }
 })
 
-// Edit product (Admin) 
+// EDIT PRODUCT
 router.patch('/:id', authAdmin, uploadProductImage.single('mainImageUrl'), async (req, res) => {
   console.log('Edit product (Admin)', 'req.body', req.body)
   console.log('------------ req.file ---------', req.file)
@@ -94,7 +94,7 @@ router.patch('/:id', authAdmin, uploadProductImage.single('mainImageUrl'), async
   }
 })
 
-// Add color to product
+// ADD COLOR TO PRODUCT
 router.post('/:productId/colors', authAdmin, async (req, res) => {
   console.log('req.body', req.body)
   
@@ -150,7 +150,7 @@ router.patch('/:productId/colors/:colorId', authAdmin, uploadMultipleImages.arra
 
     req.files && req.files.map(file => {
       console.log({file})
-      existingColor.images.push(file.filename)
+      existingColor.images.push(`uploads/products/${req.params.productId}/${file.filename}`)
     })
     existingColor.images.push()
 
@@ -172,22 +172,12 @@ router.patch('/:productId/colors/:colorId/image', authAdmin, async (req, res) =>
 
   try {
     const product = await Product.findOne({ _id: req.params.productId })
-    // console.log({product})
     const existingColor = product.colors.find(color => color._id.equals(req.params.colorId))
     let colorImages = existingColor.images
-    
-    console.log('before: colorImages', colorImages)
-    // existingColor.images.map()
-    // console.log('after', {existingColor})
-
     const imageIndex = colorImages.indexOf(req.body.imgUrl)
-    console.log({imageIndex})
-
     colorImages.splice(imageIndex, 1)
-    console.log(`uploads/products/${req.params.productId}/${req.body.imgUrl}`)
     FileHelper.deleteFile(`uploads/products/${req.params.productId}/${req.body.imgUrl}`)
 
-    console.log('product before saving', product)
     await product.save()
     res.send(product)
   } catch (error) {
@@ -201,7 +191,7 @@ router.patch('/:productId/colors/:colorId/image', authAdmin, async (req, res) =>
 router.get('/:id', async (req, res) => {
   const isEdit = req.query.edit
   let responseObj = {}
-
+  
   try {
     const product = await Product.findById(
       req.params.id, 

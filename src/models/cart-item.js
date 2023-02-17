@@ -9,6 +9,9 @@ const cartItemSchema = new mongoose.Schema({
     type: Number,
     required: true,
     min: [1, 'Quantity can not be less then 1.']
+  },
+  selectedColorId: {
+    type: mongoose.Schema.Types.ObjectId
   }
 }, {
   _id : false
