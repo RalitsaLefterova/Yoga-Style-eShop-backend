@@ -11,6 +11,9 @@ const collectionSchema = new mongoose.Schema({
   active: {
     type: Boolean,
     default: false
+  },
+  position: {
+    type: Number
   }
 })
 

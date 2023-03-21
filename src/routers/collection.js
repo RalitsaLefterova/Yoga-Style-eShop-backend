@@ -1,70 +1,41 @@
 const express = require('express')
-const path = require('path')
-const multer = require('multer')
-const sharp = require('sharp')
 
-const auth = require('../middleware/auth')
 const authAdmin = require('../middleware/auth-admin')
+const { uploadCollectionImage } = require('../middleware/multer-config')
 const Collection = require('../models/collection')
 const FileHelper = require('../utils/files')
 
 const router = new express.Router()
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, '../..', '/uploads/collections'))
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now()
-    // Note: Multer does not add extensions to file names, and it’s recommended to return a filename complete with a file extension.
-    cb(null, 'collection-' + req.body.title.replace(/\s+/g, '-').toLowerCase() + '-' + uniqueSuffix + path.extname(file.originalname))
-  }
-})
-
-const uploadCollection = multer({
-  storage,
-  limits: {
-    fileSize: 1000000
-  },
-  fileFilter(req, file, cb) {
-    if (!file.originalname.match(/\.(jpg|jpeg|png)$/)) {
-      return cb(new Error('Please upload jpg, jpeg or png.'))
-    }
-    cb(undefined, true)
-  }
-})
-
-// Create collection 
-router.post('/', authAdmin, uploadCollection.single('cover'), async (req, res, next) => {
+// CREATE COLLECTION 
+router.post('/', authAdmin, uploadCollectionImage.single('cover'), async (req, res, next) => {
   const title = req.body.title
-  console.log('------------ req.file ---------', req.file)
-  // const cover = FileHelper.createFilePath(req.file.filename)
-  const cover = req.file.filename
+  const cover = `uploads/collections/${req.file.filename}`
 
-  const collection = new Collection({ title, cover })
-
-  await collection.save()
-  res.send('collection created')
-
-  }, (error, req, res, next) => {
-    console.log('error when create collection', error, req.file)
-    res.status(400).send({ error: error.message })
+  try {
+    const collection = new Collection({ title, cover })
+    const collections = await Collection.find({})
+    console.log('collectionsLength', collections.length)
+    collection.position = collections.length
+  
+    await collection.save()
+    res.send(collection)
+  } catch (error) {
+    res.status(400).send(error)
+  }
   })
 
-// Get all collections
+// GET ALL COLLECTIONS
 router.get('/', async (req, res) => {
   let isShortInfo = !!req.query.short,
       collections = []
 
   try {
-    const collectionsDetailedInfo = await Collection.find({})
-    
-    isShortInfo
-      ? collections = collectionsDetailedInfo.reduce(
-        (accumulator, collection) => 
-          accumulator.concat({ _id: collection._id, title: collection.title }), 
-        []) 
-      : collections = collectionsDetailedInfo
+    if (isShortInfo) {
+      collections = await Collection.find({}, '_id title')
+    } else {
+      collections = await Collection.find({})
+    }
 
     res.send(collections)
   } catch (e) {
@@ -72,7 +43,7 @@ router.get('/', async (req, res) => {
   }
 })
 
-// Get collection by id
+// GET COLLECTION BY ID
 router.get('/:id', async (req, res) => {
   const _id = req.params.id
   try {
@@ -86,16 +57,11 @@ router.get('/:id', async (req, res) => {
   }
 })
 
-
-
-// Edit collection (Admin)
-router.patch('/:id', authAdmin, uploadCollection.single('cover'), async (req, res) => {
-  // console.log('in Edit collection req.body', req.body)
-  // console.log('in Edit collection req.file', req.file)
+// EDIT COLLECTION (Admin)
+router.patch('/:id', authAdmin, uploadCollectionImage.single('cover'), async (req, res) => {
   if (req.file) { 
-    req.body.cover = FileHelper.createFilePath(req.file.path)
+    req.body.cover = `uploads/collections/${req.file.filename}`
   }
-
   const updates = Object.keys(req.body)
   const allowedUpdates = ['title', 'active', 'cover']
   const isValidOperation = updates.every((update) => allowedUpdates.includes(update))
@@ -109,25 +75,51 @@ router.patch('/:id', authAdmin, uploadCollection.single('cover'), async (req, re
     if (!collection) {
       return res.status(404).send()
     }
-    // console.log('req.body', req.body)
-    // console.log('collection ====>', collection)
 
-    if (req.file) {
-      FileHelper.deleteFile(collection.cover)
-    }
+    req.file && FileHelper.deleteFile(collection.cover)
 
     updates.forEach((update) => collection[update] = req.body[update])
 
     await collection.save()
     res.send(collection)
-
   } catch (e) {
     res.status(500).send(e)
   }
 
 })
 
-// Delete collection (Admin)
+// EDIT COLLECTION POSITION (Admin)
+router.patch('/reorder/:id/', authAdmin, async (req, res) => {
+  if (!req.body.newPosition) {
+    return req.status(400).send({ error: 'Invalid operation! Mandatory parameter "newPosition" is missing.'})
+  }
+
+  const collectionId = req.params.id
+
+  try {
+    let collections = []
+    collections = await Collection.find({})
+    // console.log({collections})
+    
+    const collection = Collection.find({ _id: collectionId })
+    console.log({collection})
+
+    const collectionIndex = collections.findIndex(collection => {
+      console.log('collection._id', collection._id)
+      console.log('collectionId', collectionId)
+      console.log('collection._id.equals(collectionId)', collection._id.equals(collectionId))
+      return collection._id.equals(collectionId)
+    })
+    console.log({collectionIndex})
+
+    res.send(collections)
+  } catch (error) {
+    
+  }
+})
+
+
+// DELETE COLLECTION (Admin)
 router.delete('/:id', authAdmin, async (req, res) => {
   try {
     const collection = await Collection.findOneAndDelete({ _id: req.params.id})
@@ -135,9 +127,11 @@ router.delete('/:id', authAdmin, async (req, res) => {
       return res.status(404).send()
     }
     FileHelper.deleteFile(collection.cover)
-    res.send('Collection was deleted successfully.')
-  } catch (e) {
-    res.status(500).send(e)
+
+    const collections = await Collection.find({})
+    res.send(collections)
+  } catch (error) {
+    res.status(500).send(error.message)
   }
 })
 

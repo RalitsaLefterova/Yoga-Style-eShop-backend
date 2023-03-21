@@ -1,6 +1,5 @@
 const express = require('express') 
 
-const auth = require('../middleware/auth')
 const authAdmin = require('../middleware/auth-admin')
 const { uploadProductImage, uploadMultipleImages } = require('../middleware/multer-config')
 

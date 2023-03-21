@@ -15,13 +15,23 @@ const multerSharedSettings = {
   }
 }
 
+const uploadCollectionImageStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, path.join(__dirname, '../..', '/uploads/collections'))
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now()
+    // Note: Multer does not add extensions to file names, and it’s recommended to return a filename complete with a file extension.
+    cb(null, 'collection-' + req.body.title.replace(/\s+/g, '-').toLowerCase() + '-' + uniqueSuffix + path.extname(file.originalname))
+  }
+})
+
 const uploadProductImageStorage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, path.join(__dirname, '../..', '/uploads/products'))
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now()
-    // Note: Multer does not add extensions to file names, and it’s recommended to return a filename complete with a file extension.
     cb(null, 'product-' + req.body.title.replace(/\s+/g, '-').toLowerCase() + '-' + uniqueSuffix + path.extname(file.originalname))
   }
 })
@@ -36,9 +46,13 @@ const uploadMultipleImagesStorage = multer.diskStorage({
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now()
-    // Note: Multer does not add extensions to file names, and it’s recommended to return a filename complete with a file extension.
     cb(null, 'product-' + req.params.productId + '-' + uniqueSuffix + path.extname(file.originalname))
   }
+})
+
+const uploadCollectionImage = multer({
+  ...multerSharedSettings,
+  storage: uploadCollectionImageStorage
 })
 
 const uploadProductImage = multer({
@@ -52,6 +66,7 @@ const uploadMultipleImages = multer({
 })
 
 module.exports = {
+  uploadCollectionImage,
   uploadProductImage,
   uploadMultipleImages
 }
