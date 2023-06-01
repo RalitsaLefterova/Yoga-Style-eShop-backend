@@ -33,6 +33,11 @@ const productSchema = new mongoose.Schema({
     required: true,
     ref: 'Collection'
   },
+  // collectionInfo: {
+  //   type: mongoose.Schema.Types.ObjectId,
+  //   required: true,
+  //   ref: 'Collection'
+  // },
 }, {
   timestamps: true
 }, { 
@@ -40,7 +45,7 @@ const productSchema = new mongoose.Schema({
 })
 
 productSchema.virtual('id').get(function() { 
-  return this._id
+  return this._id.toHexString()
 })
 
 productSchema.set('toJSON', {
@@ -60,6 +65,12 @@ productSchema.set('toObject', {
   },
   versionKey: false
 })
+
+// productSchema.virtual('collectionRef', {
+//   ref: 'Collection',
+//   localField: 'collectionInfo',
+//   foreignField: '_id'
+// })
 
 const Product = mongoose.model('Product', productSchema)
 

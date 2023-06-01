@@ -53,7 +53,8 @@ router.get('/', async (req, res) => {
     }
     // console.log('searchOptions', searchOptions)
     const products = await Product.find(searchOptions, 'title price stock mainImageUrl collectionId active colors')
-    // console.log('products', products)
+    // console.log('get all products', products)
+
     res.send(products)
   } catch (e) {
     res.status(500).send(e)
@@ -87,6 +88,7 @@ router.patch('/:id', authAdmin, uploadProductImage.single('mainImageUrl'), async
 
     // Always return product info instead of success message 
     // because the response is used also to update a record in admin product table
+    console.log('edited product', product)
     res.send(product)
   } catch (e) {
     res.status(500).send(e)
@@ -205,7 +207,7 @@ router.get('/:id', async (req, res) => {
     } else {
       responseObj = product
     }
-
+    console.log('get product by id', responseObj)
     res.send(responseObj)
   } catch (e) {
     res.status(500).send(e)

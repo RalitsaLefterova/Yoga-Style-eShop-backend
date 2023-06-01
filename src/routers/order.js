@@ -4,24 +4,51 @@ const Order = require('../models/order')
 const User = require('../models/user')
 const Product = require('../models/product')
 const Address = require('../models/address')
-const { isValidObjectId } = require('mongoose')
+const Collection = require('../models/collection')
+// const { isValidObjectId, Collection } = require('mongoose')
 
 const router = new express.Router()
 
-// Create order (User)
+// CREATE AN ORDER (User)
 router.post('/', auth, async (req, res) => {
   let cartProducts = req.user.cart
 
   try {
-    const products = await Promise.all(cartProducts.map(async (product) => {
-      return {
-        product: (await Product.find({ _id : product.productId}, 'title mainImageUrl price'))[0],
-        quantity: product.quantity
+    const products = await Promise.all(cartProducts.map(async (cartProduct) => {
+      
+      const product = await Product.findById(cartProduct.productId, 'id title mainImageUrl price collectionId')
+      // .populate({
+      //   path: 'collectionId',
+      //   select: '_id title'
+      // })
+      
+      //TODO: Fetch/populate id and title for collection. 
+
+      return { 
+        product, 
+        quantity: cartProduct.quantity 
       }
+      
     }))
+    console.log('products', products)
+
+    const orderProducts = products.map(orderProduct => {
+      // Convert the product object to a plain JavaScript object
+      const plainProduct = orderProduct.product.toObject();
+      // console.log({plainProduct})
+      // Rename the '_id' field to 'id'
+      // plainProduct.id = plainProduct._id.toString();
+      // delete plainProduct._id;
+    
+      // Return the modified plainProduct object
+      return {
+        product: plainProduct,
+        quantity: orderProduct.quantity
+      };
+    });
 
     const address = await req.user.addresses.id(req.user.shippingAddress)
-
+    // console.log(address)
     const delivery_address = {
       street: address.street,
       city: address.city,
@@ -31,20 +58,23 @@ router.post('/', auth, async (req, res) => {
     
     const order = new Order({
       owner: req.user._id,
-      products,
+      products: orderProducts,
       status: 'Pending',
       delivery_address,
       total: req.body.total
     })
+    // console.log(order)
+    console.log(order.products)
     await order.save()
     
     req.user.cart = []
     await req.user.save()
 
-    //TODO: Send email to thank the user for the new order
+    //TODO: Send email to thank the user for the new order and that the order's status will be visible in the user profile page.
     res.status(201).send('Order created')
   } catch (error) {
-    res.send(error)
+    console.log(error)
+    res.status(500).send('something went wrong')
   }
 })
 
@@ -63,7 +93,7 @@ router.patch('/:id', auth, async (req, res) => {
 
 
 
-// Get all orders (ADMIN)
+// GET ALL ORDERS (Admin)
 // GET /orders?completed=true
 // GET /orders?limit=10&skip=20
 // GET /orders?sortBy=createdAt:desc
@@ -81,11 +111,13 @@ router.get('/', auth, async (req, res) => {
   }
 
   try {
-    const orders = await Order.find({}, 'owner status createdAt').populate({
+    console.log('before')
+    const orders = await Order.find({}, 'status createdAt owner').populate({
       path: 'owner',
-      select: 'fullName'
+      select: '_id fullName'
     })
-   
+
+    console.log('after', {orders})
     res.send(orders)
 
     // Variant with populate for one user (Remove from here!)
@@ -113,7 +145,7 @@ router.get('/:id', auth, async (req, res) => {
       path: 'owner',
       select: 'fullName'
     })
-    
+    console.log({order})
     res.send(order)
   } catch (error) {
     res.send(error)

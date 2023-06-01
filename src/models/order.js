@@ -38,6 +38,12 @@ const orderSchema = new mongoose.Schema({
   timestamps: true
 })
 
+orderSchema.virtual('owners', {
+  ref: 'User',
+  localField: 'owner',
+  foreignField: '_id'
+})
+
 const Order = mongoose.model('Order', orderSchema)
 
 module.exports = Order

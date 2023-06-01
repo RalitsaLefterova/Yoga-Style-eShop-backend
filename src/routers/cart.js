@@ -9,7 +9,7 @@ const router = new express.Router()
 // Add product to cart / Increase quantity
 router.patch('/add/:productId', auth, async (req, res) => {
   const productId = req.params.productId
-  console.log('req.body', req.body)
+  // console.log('req.body', req.body)
   try {
     const existingProduct = req.user.cart.find(product => product.productId.equals(productId))
     const productInfo = await Product.findById(productId, 'title price mainImageUrl collectionId').exec()
@@ -21,7 +21,7 @@ router.patch('/add/:productId', auth, async (req, res) => {
     existingProduct ? existingProduct.quantity += 1 : req.user.cart.push({ productId: productId, quantity: 1})
 
     await req.user.save()
-    console.log('productInfo', productInfo)
+    // console.log('productInfo', productInfo)
     res.send(productInfo)
   } catch(error) {
     console.log('error', error, {error})
