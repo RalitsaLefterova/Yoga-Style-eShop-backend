@@ -2,16 +2,16 @@ const express = require('express')
 
 const authAdmin = require('../middleware/auth-admin')
 const { uploadProductImage, uploadMultipleImages } = require('../middleware/multer-config')
-
 const FileHelper = require('../utils/files')
 const Product = require('../models/product')
 const Collection = require('../models/collection')
 
 const router = new express.Router()
 
-
 // Create product
 router.post('/', authAdmin, uploadProductImage.single('mainImageUrl'), async (req, res) => {
+  console.log('req.body', req.body)
+  
   const product = new Product({
     ...req.body,
     mainImageUrl: `uploads/products/${req.file.filename}`
@@ -29,7 +29,7 @@ router.post('/', authAdmin, uploadProductImage.single('mainImageUrl'), async (re
 // GET /products?sortBy=createdAt:desc
 router.get('/', async (req, res) => {
   const sort = {}
-  let searchOptions = {}
+    searchOptions = {}
   
   try {
     // console.log('req.query', req.query)
