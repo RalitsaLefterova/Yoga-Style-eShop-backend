@@ -99,6 +99,4 @@ module.exports = shipit => {
     shipit.start('pm2-server');
   });
 
-  
-
 }
