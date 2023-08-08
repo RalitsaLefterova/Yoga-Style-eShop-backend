@@ -11,7 +11,7 @@ const { getUserProfileInfo } = require('../utils/user-utils')
 
 const router = new express.Router()
 
-// GET user profile
+// USER: GET user profile
 router.get('/me', auth, async (req, res) => {
   try {
     const userProfileInfo = await getUserProfileInfo(req.user._id)
@@ -22,9 +22,12 @@ router.get('/me', auth, async (req, res) => {
   }
 })
 
+// ADMIN: GET all users
 router.get('/', authAdmin, async (req, res) => {
+  console.log('in GET all users list')
   try {
     const users = await User.find({})
+    console.log('"users" result:', users)
     res.send(users)
   } catch (error) {
     res.status(500).send(error)
@@ -137,7 +140,7 @@ const upload = multer({
 })
 
 // Upload avatar
-// TODO: Do I need that? Use update profile instead!
+// TODO: Do I need that? Use update profile instead!?
 router.post('/me/avatar', auth, upload.single('avatar'), async (req, res) => {
   const buffer = await sharp(req.file.buffer).resize({ width: 250, height: 250 }).png().toBuffer()
   req.user.avatar = buffer

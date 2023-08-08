@@ -141,11 +141,11 @@ userSchema.methods.getCartDetails = async function() {
 
     let populatedCart = resultOfPopulation.cart.toObject()
 
-    console.log({populatedCart})
+    // console.log({populatedCart})
 
     if (populatedCart.length > 0) {
       cart = populatedCart.map(item => {
-        console.log({item})
+        // console.log({item})
         return { ...item.productId, quantity: item.quantity }
       })
     }    
