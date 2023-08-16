@@ -10,7 +10,7 @@ const router = new express.Router()
 // CREATE COLLECTION 
 router.post('/', authAdmin, uploadCollectionImage.single('cover'), async (req, res, next) => {
   const title = req.body.title
-  const cover = `uploads/collections/${req.file.filename}`
+  const cover = req.file ? `uploads/collections/${req.file.filename}` : undefined
 
   try {
     const collection = new Collection({ title, cover })
@@ -21,9 +21,13 @@ router.post('/', authAdmin, uploadCollectionImage.single('cover'), async (req, r
     await collection.save()
     res.send(collection)
   } catch (error) {
-    res.status(400).send(error)
+    console.log('create collection error', error, error.message, error.errors)
+    res.status(400).send({
+      message: error.message || "An unknown error occurred",
+      details: error.errors || {}
+    });
   }
-  })
+})
 
 // GET ALL COLLECTIONS
 router.get('/', async (req, res) => {
