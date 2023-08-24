@@ -32,11 +32,14 @@ router.post('/', authAdmin, uploadCollectionImage.single('cover'), async (req, r
 // GET ALL COLLECTIONS
 router.get('/', async (req, res) => {
   let isShortInfo = !!req.query.short,
+      isActiveCollectionsOnly = !!req.query.active,
       collections = []
 
   try {
     if (isShortInfo) {
       collections = await Collection.find({}, '_id title').sort('position')
+    } else if (isActiveCollectionsOnly) {
+      collections = await Collection.find({ active: true }).sort('position')
     } else {
       collections = await Collection.find({}).sort('position')
     }
