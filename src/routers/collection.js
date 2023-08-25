@@ -4,6 +4,7 @@ const authAdmin = require('../middleware/auth-admin')
 const { uploadCollectionImage } = require('../middleware/multer-config')
 const Collection = require('../models/collection')
 const FileHelper = require('../utils/files')
+const Product = require('../models/product')
 
 const router = new express.Router()
 
@@ -15,17 +16,16 @@ router.post('/', authAdmin, uploadCollectionImage.single('cover'), async (req, r
   try {
     const collection = new Collection({ title, cover })
     const collections = await Collection.find({})
-    console.log('collectionsLength', collections.length)
+
     collection.position = collections.length
   
     await collection.save()
     res.send(collection)
   } catch (error) {
-    console.log('create collection error', error, error.message, error.errors)
     res.status(400).send({
       message: error.message || "An unknown error occurred",
       details: error.errors || {}
-    });
+    })
   }
 })
 
@@ -97,7 +97,6 @@ router.patch('/:id', authAdmin, uploadCollectionImage.single('cover'), async (re
 
 // EDIT COLLECTION POSITION (Admin)
 router.patch('/reorder/:id/', authAdmin, async (req, res) => {
-  // console.log('----- EDIT COLLECTION POSITION (Admin) -----', 'body:', req.body)
   if (req.body.newPosition === undefined) {
     return res.status(400).send({ error: 'Invalid operation! Mandatory parameter "newPosition" is missing.'})
   }
@@ -139,13 +138,27 @@ router.patch('/reorder/:id/', authAdmin, async (req, res) => {
 // DELETE COLLECTION (Admin)
 router.delete('/:id', authAdmin, async (req, res) => {
   try {
+    const collectionId = req.params.id
+
+    // Check if the collection has any associated products 
+    const productsInCollection = await Product.findOne({ collectionId: collectionId})
+
+    if (productsInCollection) {
+      return res.status(400).send({ message: "Cannot delete collection with products." })
+    }
+
     const collection = await Collection.findOneAndDelete({ _id: req.params.id})
+
     if (!collection) {
       return res.status(404).send()
     }
+
+    // Delete the associated cover file
     FileHelper.deleteFile(collection.cover)
 
+    // Get the updated list of collections
     const collections = await Collection.find({})
+
     res.send(collections)
   } catch (error) {
     res.status(500).send(error.message)
