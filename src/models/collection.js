@@ -14,7 +14,8 @@ const collectionSchema = new mongoose.Schema({
     default: false
   },
   position: {
-    type: Number
+    type: Number,
+    required: true
   }
 })
 

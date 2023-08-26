@@ -4,41 +4,44 @@ const authAdmin = require('../middleware/auth-admin')
 const { uploadCollectionImage } = require('../middleware/multer-config')
 const Collection = require('../models/collection')
 const FileHelper = require('../utils/files')
+const Product = require('../models/product')
 
 const router = new express.Router()
 
 // CREATE COLLECTION 
 router.post('/', authAdmin, uploadCollectionImage.single('cover'), async (req, res, next) => {
   const title = req.body.title
-  let cover = ''
-
-  if (req.file && req.file.filename) {
-    cover = `uploads/collections/${req.file.filename}`
-  }
+  const cover = req.file ? `uploads/collections/${req.file.filename}` : ''
 
   try {
     const collection = new Collection({ title, cover })
     const collections = await Collection.find({})
-    console.log('collectionsLength', collections.length)
+
     collection.position = collections.length
   
     await collection.save()
     res.send(collection)
   } catch (error) {
-    res.status(400).send(error)
+    res.status(400).send({
+      message: error.message || "An unknown error occurred",
+      details: error.errors || {}
+    })
   }
-  })
+})
 
 // GET ALL COLLECTIONS
 router.get('/', async (req, res) => {
   let isShortInfo = !!req.query.short,
+      isActiveCollectionsOnly = !!req.query.active,
       collections = []
 
   try {
     if (isShortInfo) {
-      collections = await Collection.find({}, '_id title')
+      collections = await Collection.find({}, '_id title').sort('position')
+    } else if (isActiveCollectionsOnly) {
+      collections = await Collection.find({ active: true }).sort('position')
     } else {
-      collections = await Collection.find({})
+      collections = await Collection.find({}).sort('position')
     }
 
     res.send(collections)
@@ -94,31 +97,40 @@ router.patch('/:id', authAdmin, uploadCollectionImage.single('cover'), async (re
 
 // EDIT COLLECTION POSITION (Admin)
 router.patch('/reorder/:id/', authAdmin, async (req, res) => {
-  if (!req.body.newPosition) {
-    return req.status(400).send({ error: 'Invalid operation! Mandatory parameter "newPosition" is missing.'})
+  if (req.body.newPosition === undefined) {
+    return res.status(400).send({ error: 'Invalid operation! Mandatory parameter "newPosition" is missing.'})
   }
 
   const collectionId = req.params.id
+  const newPosition = req.body.newPosition
+
+  console.log({collectionId}, {newPosition})
 
   try {
-    let collections = []
-    collections = await Collection.find({})
-    // console.log({collections})
+    const collections = await Collection.find({}).sort('position')
     
-    const collection = Collection.find({ _id: collectionId })
-    console.log({collection})
+    // Find the collection to be moved
+    const collectionToMove = collections.find(collection => collection._id.equals(collectionId))
 
-    const collectionIndex = collections.findIndex(collection => {
-      console.log('collection._id', collection._id)
-      console.log('collectionId', collectionId)
-      console.log('collection._id.equals(collectionId)', collection._id.equals(collectionId))
-      return collection._id.equals(collectionId)
+    // Remove the collection from the list temporarily
+    const updatedCollections = collections.filter(collection => !collection._id.equals(collectionId))
+    
+    // Update the position of the collection to be moved
+    collectionToMove.position = newPosition
+    
+    // Reorder other collections positions based on the new order
+    updatedCollections.splice(newPosition, 0, collectionToMove)
+    updatedCollections.forEach((collection, index) => {
+      collection.position = index
     })
-    console.log({collectionIndex})
-
-    res.send(collections)
-  } catch (error) {
     
+    // Save the updated positions to the database
+    const updatedPromises = updatedCollections.map(collection => collection.save())
+    await Promise.all(updatedPromises)
+
+    res.send(updatedCollections)
+  } catch (error) {
+    res.status(500).send(error)
   }
 })
 
@@ -126,13 +138,27 @@ router.patch('/reorder/:id/', authAdmin, async (req, res) => {
 // DELETE COLLECTION (Admin)
 router.delete('/:id', authAdmin, async (req, res) => {
   try {
+    const collectionId = req.params.id
+
+    // Check if the collection has any associated products 
+    const productsInCollection = await Product.findOne({ collectionId: collectionId})
+
+    if (productsInCollection) {
+      return res.status(400).send({ message: "Cannot delete collection with products." })
+    }
+
     const collection = await Collection.findOneAndDelete({ _id: req.params.id})
+
     if (!collection) {
       return res.status(404).send()
     }
+
+    // Delete the associated cover file
     FileHelper.deleteFile(collection.cover)
 
+    // Get the updated list of collections
     const collections = await Collection.find({})
+
     res.send(collections)
   } catch (error) {
     res.status(500).send(error.message)
