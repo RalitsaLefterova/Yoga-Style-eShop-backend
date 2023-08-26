@@ -6,7 +6,8 @@ const collectionSchema = new mongoose.Schema({
     required: true
   },
   cover: {
-    type: String
+    type: String,
+    required: true
   },
   active: {
     type: Boolean,
