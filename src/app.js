@@ -39,6 +39,23 @@ app.use('/orders', orderRouter)
 app.use('/address', addressRouter)
 app.use('/payment', paymentsRouter)
 
+app.use((req, res, next) => {
+  const allowedOrigins = [
+    'https://yoga-style-eshop.netlify.app',
+    'http://localhost:3000',
+    'https://thecrazysquirrel.net',
+    // Add more origins here
+  ];
+
+  const requestOrigin = req.headers.origin
+
+  if (allowedOrigins.includes(requestOrigin)) {
+    res.header('Access-Control-Allow-Origin', requestOrigin)
+  }
+
+  next()
+})
+
 app.use('/', (req, res) => {
   res.send('Hello World!')
 })
