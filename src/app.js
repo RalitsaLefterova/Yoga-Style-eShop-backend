@@ -23,7 +23,7 @@ app.use(express.json())
 // app.use(express.urlencoded({extended: true}))
 
 app.use(cors({
-  "origin": ["https://yoga-style-eshop.netlify.app", "http://localhost:3000"],
+  "origin": ["https://yoga-style-eshop.netlify.app", "http://localhost:3000", "https://thecrazysquirrel.net"],
   "methods": "GET,HEAD,PUT,POST,PATCH,DELETE",
   "allowedHeaders": ['Content-Type', 'Authorization'],
   "credentials": true,
