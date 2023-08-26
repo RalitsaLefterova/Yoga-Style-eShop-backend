@@ -11,7 +11,7 @@ const router = new express.Router()
 // CREATE COLLECTION 
 router.post('/', authAdmin, uploadCollectionImage.single('cover'), async (req, res, next) => {
   const title = req.body.title
-  const cover = req.file ? `uploads/collections/${req.file.filename}` : undefined
+  const cover = req.file ? `uploads/collections/${req.file.filename}` : ''
 
   try {
     const collection = new Collection({ title, cover })
