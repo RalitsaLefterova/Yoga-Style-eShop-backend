@@ -2,7 +2,8 @@ const mongoose = require('mongoose')
 
 const productColorSchema = new mongoose.Schema({
   color: {
-    type: String
+    type: String,
+    required: [true, 'Please provide color name']
   },
   images: [{
     type: String

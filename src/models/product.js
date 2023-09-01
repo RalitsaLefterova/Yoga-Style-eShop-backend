@@ -16,7 +16,7 @@ const productSchema = new mongoose.Schema({
   },
   mainImageUrl: {
     type: String,
-    required: true
+    required: [true, 'Please Include the product main image']
   },
   colors: [ProductColor.schema],
   stock: {

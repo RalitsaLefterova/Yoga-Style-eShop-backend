@@ -104,8 +104,6 @@ router.patch('/reorder/:id/', authAdmin, async (req, res) => {
   const collectionId = req.params.id
   const newPosition = req.body.newPosition
 
-  console.log({collectionId}, {newPosition})
-
   try {
     const collections = await Collection.find({}).sort('position')
     

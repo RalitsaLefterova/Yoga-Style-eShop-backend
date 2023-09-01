@@ -10,16 +10,19 @@ const router = new express.Router()
 
 // Create product
 router.post('/', authAdmin, uploadProductImage.single('mainImageUrl'), async (req, res) => {
-  console.log('req.body', req.body)
-  
-  const product = new Product({
-    ...req.body,
-    mainImageUrl: `uploads/products/${req.file.filename}`
-  })
-  await product.save()
-  res.send('product created')
-}, (error, req, res, next) => {
-  res.status(400).send({ error: error.message })
+  try {
+    const product = new Product({
+      ...req.body,
+      mainImageUrl: req.file ? `uploads/products/${req.file.filename}` : ''
+    })
+    await product.save()
+    res.send('product created')
+  } catch (error) {
+    res.status(400).send({
+      message: error.message || "An unknown error occurred",
+      details: error.errors || {}
+    })
+  }
 })
 
 // GET ALL PRODUCTS
@@ -52,7 +55,7 @@ router.get('/', async (req, res) => {
       sort[parts[0]] = parts[1] === 'desc' ? -1 : 1
     }
     // console.log('searchOptions', searchOptions)
-    const products = await Product.find(searchOptions, 'title price stock mainImageUrl collectionId active colors')
+    const products = await Product.find(searchOptions, 'title price stock mainImageUrl collectionId active')
     // console.log('get all products', products)
 
     res.send(products)
@@ -72,7 +75,7 @@ router.patch('/:id', authAdmin, uploadProductImage.single('mainImageUrl'), async
   const isValidOperation = updates.every((update) => allowedUpdates.includes(update))
 
   if (!isValidOperation) {
-    return res.status(400).send({ error: 'Invalid operation!'})
+    return res.status(400).send({ message: 'Invalid operation!'})
   }
   
   try {
@@ -88,44 +91,43 @@ router.patch('/:id', authAdmin, uploadProductImage.single('mainImageUrl'), async
 
     // Always return product info instead of success message 
     // because the response is used also to update a record in admin product table
-    console.log('edited product', product)
     res.send(product)
-  } catch (e) {
-    res.status(500).send(e)
+  } catch (error) {
+    res.status(400).send({
+      message: error.message || "An unknown error occurred",
+      details: error.errors || {}
+    })
   }
 })
 
 // ADD COLOR TO PRODUCT
 router.post('/:productId/colors', authAdmin, async (req, res) => {
-  console.log('req.body', req.body)
   
   try {
     const product = await Product.findOne({ _id: req.params.productId})
     const doesColorExist = product.colors.find(color => {
-      console.log(color.color, req.body.color)
       return color.color == req.body.color
     })
-    console.log({doesColorExist})
 
     if (doesColorExist) {
-      console.log('it exists')
       const error = new Error('Color already exists.')
-      error.code = "422"
+      error.code = '422'
       throw error
     }
 
     let colorObj = {}
     colorObj.color = req.body.color
     
-    
-    console.log('before save', {colorObj})
     product.colors.push(colorObj)
     await product.save()
+
     res.send(product)
+
   } catch (error) {
-    console.log({error}, error.message, error.code)
-    res.status(422).send(error.message)
-    // res.status(500).send(error.message)
+    res.status(422).send({
+      message: error.message || "An unknown error occurred",
+      details: error.errors || {}
+    })
   }
 })
 
@@ -199,7 +201,9 @@ router.get('/:id', async (req, res) => {
       'active collectionId description mainImageUrl price stock title colors'
     )
 
-    !product && res.status(404).send()
+    !product && res.status(404).send({ 
+      message: 'Product not found. Please check the provided information.' 
+    })
 
     if (isEdit) {
       const collections = await Collection.find({}, 'title')
@@ -209,8 +213,8 @@ router.get('/:id', async (req, res) => {
     }
     console.log('get product by id', responseObj)
     res.send(responseObj)
-  } catch (e) {
-    res.status(500).send(e)
+  } catch (error) {
+    res.status(500).send(error)
   }
 })
 
