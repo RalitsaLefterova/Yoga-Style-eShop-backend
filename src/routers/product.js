@@ -1,4 +1,5 @@
 const express = require('express') 
+const path = require('path')
 
 const authAdmin = require('../middleware/auth-admin')
 const { uploadProductImage, uploadMultipleImages } = require('../middleware/multer-config')
@@ -25,17 +26,18 @@ router.post('/', authAdmin, uploadProductImage.single('mainImageUrl'), async (re
   }
 })
 
-// GET ALL PRODUCTS
-// GET /products?collectionTitle=meditation%20and%20relaxasion
-// GET /products?active=true
+// GET ALL PRODUCTS //
+// ---------------- //
+// GET ALL PRODUCTS FROM PARTICULAR COLLECTION -> example: /products?collectionTitle=meditation%20and%20relaxasion
+// GET ALL ACTIVE PRODUCTS -> /products?active=true
 // GET /products?limit=10&skip20
 // GET /products?sortBy=createdAt:desc
 router.get('/', async (req, res) => {
   const sort = {}
-    searchOptions = {}
+  let searchOptions = {}
+  // console.log('req.query', req.query)
   
   try {
-    // console.log('req.query', req.query)
     if (req.query.collectionTitle) {
       const collection = await Collection.find({ title: req.query.collectionTitle.toLowerCase() })
       // console.log('collection', collection, req.query.collectionTitle.toLowerCase())
@@ -83,6 +85,7 @@ router.patch('/:id', authAdmin, uploadProductImage.single('mainImageUrl'), async
 
     !product && res.status(404).send()
 
+    // If there is a new file delete the old one from the file system
     req.file && FileHelper.deleteFile(product.mainImageUrl)
     
     updates.forEach((update) => product[update] = req.body[update])
@@ -179,7 +182,7 @@ router.patch('/:productId/colors/:colorId/image', authAdmin, async (req, res) =>
     let colorImages = existingColor.images
     const imageIndex = colorImages.indexOf(req.body.imgUrl)
     colorImages.splice(imageIndex, 1)
-    FileHelper.deleteFile(`uploads/products/${req.params.productId}/${req.body.imgUrl}`)
+    FileHelper.deleteFile(req.body.imgUrl)
 
     await product.save()
     res.send(product)
@@ -188,7 +191,29 @@ router.patch('/:productId/colors/:colorId/image', authAdmin, async (req, res) =>
   }
 })
 
+// DELETE COLOR FORM PRODUCT
+router.delete('/:productId/colors/:colorId', authAdmin, async (req, res) => {
+  try {
+    const product = await Product.findOne({ _id: req.params.productId })
+    const existingColor = product.colors.find(color => color._id.equals(req.params.colorId))
+    
+    if (!existingColor) {
+      return res.status(404).send()
+    }
 
+    existingColor.images.map(image => {
+      FileHelper.deleteFile(image)
+    })
+
+    product.colors.id(req.params.colorId).remove()
+
+    await product.save()
+    res.send(product)
+  } catch (error) {
+    console.log({error})
+    res.status(500).send(error)
+  }
+})
 
 // Get product by id
 router.get('/:id', async (req, res) => {
@@ -218,17 +243,28 @@ router.get('/:id', async (req, res) => {
   }
 })
 
-// Delete product
+// DELETE PRODUCTS //
 router.delete('/:id', authAdmin, async (req, res) => {
+  let searchOptions = {}
+  const productId = req.params.id
+
   try {
-    const product = await Product.findOneAndDelete({ _id: req.params.id })
+    const product = await Product.findOneAndDelete({ _id: productId })
     if (!product) {
-      return res.status(404).send()
+      return res.status(404).send('Product not found.')
     }
-    // res.send(product)
-    res.send('Product ssuccesfuly deleted!')
-  } catch (e) {
-    res.status(500).send(e)
+
+    const directoryPath = path.join(__dirname, '../..', `/uploads/products/${productId}`)
+
+    FileHelper.deleteDirectoryRecursive(directoryPath)
+    FileHelper.deleteFile(product.mainImageUrl)
+
+    //TODO: send back all products after delete this particular product (have in mind existing searching options)
+    const products = await Product.find(searchOptions, 'title price stock mainImageUrl collectionId active')
+
+    res.send(products)
+  } catch (error) {
+    res.status(500).send(error)
   }
 })
 
