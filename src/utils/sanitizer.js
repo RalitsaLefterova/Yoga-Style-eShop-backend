@@ -17,6 +17,11 @@ const sanitizeHtml = (req, res, next) => {
   next()
 }
 
+const sanitizeTitle = (title) => {
+  return title.replace(/[^a-zA-Z0-9-_]/g, '-')
+}
+
 module.exports = {
   sanitizeHtml,
+  sanitizeTitle
 }
