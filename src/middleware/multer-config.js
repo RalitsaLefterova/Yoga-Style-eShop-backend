@@ -1,6 +1,7 @@
 const multer = require('multer')
 const path = require('path')
 const fs = require('fs')
+const { sanitizeTitle } = require('../utils/sanitizer')
 
 const multerSharedSettings = {
   limits: {
@@ -21,8 +22,9 @@ const uploadCollectionImageStorage = multer.diskStorage({
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now()
+    const sanitizedTtitle = sanitizeTitle(req.body.title)
     // Note: Multer does not add extensions to file names, and it’s recommended to return a filename complete with a file extension.
-    cb(null, 'collection-' + req.body.title.replace(/\s+/g, '-').toLowerCase() + '-' + uniqueSuffix + path.extname(file.originalname))
+    cb(null, 'collection-' + sanitizedTtitle.toLowerCase() + '-' + uniqueSuffix + path.extname(file.originalname))
   }
 })
 
@@ -32,7 +34,9 @@ const uploadProductImageStorage = multer.diskStorage({
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now()
-    cb(null, 'product-' + req.body.title.replace(/\s+/g, '-').toLowerCase() + '-' + uniqueSuffix + path.extname(file.originalname))
+    const sanitizedTtitle = sanitizeTitle(req.body.title)
+    console.log({sanitizedTtitle})
+    cb(null, 'product-' + sanitizedTtitle.toLowerCase() + '-' + uniqueSuffix + path.extname(file.originalname))
   }
 })
 

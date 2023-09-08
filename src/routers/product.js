@@ -1,4 +1,5 @@
 const express = require('express') 
+const path = require('path')
 
 const authAdmin = require('../middleware/auth-admin')
 const { uploadProductImage, uploadMultipleImages } = require('../middleware/multer-config')
@@ -10,29 +11,33 @@ const router = new express.Router()
 
 // Create product
 router.post('/', authAdmin, uploadProductImage.single('mainImageUrl'), async (req, res) => {
-  console.log('req.body', req.body)
-  
-  const product = new Product({
-    ...req.body,
-    mainImageUrl: `uploads/products/${req.file.filename}`
-  })
-  await product.save()
-  res.send('product created')
-}, (error, req, res, next) => {
-  res.status(400).send({ error: error.message })
+  try {
+    const product = new Product({
+      ...req.body,
+      mainImageUrl: req.file ? `uploads/products/${req.file.filename}` : ''
+    })
+    await product.save()
+    res.send('product created')
+  } catch (error) {
+    res.status(400).send({
+      message: error.message || "An unknown error occurred",
+      details: error.errors || {}
+    })
+  }
 })
 
-// GET ALL PRODUCTS
-// GET /products?collectionTitle=meditation%20and%20relaxasion
-// GET /products?active=true
+// GET ALL PRODUCTS //
+// ---------------- //
+// GET ALL PRODUCTS FROM PARTICULAR COLLECTION -> example: /products?collectionTitle=meditation%20and%20relaxasion
+// GET ALL ACTIVE PRODUCTS -> /products?active=true
 // GET /products?limit=10&skip20
 // GET /products?sortBy=createdAt:desc
 router.get('/', async (req, res) => {
   const sort = {}
-    searchOptions = {}
+  let searchOptions = {}
+  // console.log('req.query', req.query)
   
   try {
-    // console.log('req.query', req.query)
     if (req.query.collectionTitle) {
       const collection = await Collection.find({ title: req.query.collectionTitle.toLowerCase() })
       // console.log('collection', collection, req.query.collectionTitle.toLowerCase())
@@ -52,7 +57,7 @@ router.get('/', async (req, res) => {
       sort[parts[0]] = parts[1] === 'desc' ? -1 : 1
     }
     // console.log('searchOptions', searchOptions)
-    const products = await Product.find(searchOptions, 'title price stock mainImageUrl collectionId active colors')
+    const products = await Product.find(searchOptions, 'title price stock mainImageUrl collectionId active')
     // console.log('get all products', products)
 
     res.send(products)
@@ -72,7 +77,7 @@ router.patch('/:id', authAdmin, uploadProductImage.single('mainImageUrl'), async
   const isValidOperation = updates.every((update) => allowedUpdates.includes(update))
 
   if (!isValidOperation) {
-    return res.status(400).send({ error: 'Invalid operation!'})
+    return res.status(400).send({ message: 'Invalid operation!'})
   }
   
   try {
@@ -80,6 +85,7 @@ router.patch('/:id', authAdmin, uploadProductImage.single('mainImageUrl'), async
 
     !product && res.status(404).send()
 
+    // If there is a new file delete the old one from the file system
     req.file && FileHelper.deleteFile(product.mainImageUrl)
     
     updates.forEach((update) => product[update] = req.body[update])
@@ -88,44 +94,43 @@ router.patch('/:id', authAdmin, uploadProductImage.single('mainImageUrl'), async
 
     // Always return product info instead of success message 
     // because the response is used also to update a record in admin product table
-    console.log('edited product', product)
     res.send(product)
-  } catch (e) {
-    res.status(500).send(e)
+  } catch (error) {
+    res.status(400).send({
+      message: error.message || "An unknown error occurred",
+      details: error.errors || {}
+    })
   }
 })
 
 // ADD COLOR TO PRODUCT
 router.post('/:productId/colors', authAdmin, async (req, res) => {
-  console.log('req.body', req.body)
   
   try {
     const product = await Product.findOne({ _id: req.params.productId})
     const doesColorExist = product.colors.find(color => {
-      console.log(color.color, req.body.color)
       return color.color == req.body.color
     })
-    console.log({doesColorExist})
 
     if (doesColorExist) {
-      console.log('it exists')
       const error = new Error('Color already exists.')
-      error.code = "422"
+      error.code = '422'
       throw error
     }
 
     let colorObj = {}
     colorObj.color = req.body.color
     
-    
-    console.log('before save', {colorObj})
     product.colors.push(colorObj)
     await product.save()
+
     res.send(product)
+
   } catch (error) {
-    console.log({error}, error.message, error.code)
-    res.status(422).send(error.message)
-    // res.status(500).send(error.message)
+    res.status(422).send({
+      message: error.message || "An unknown error occurred",
+      details: error.errors || {}
+    })
   }
 })
 
@@ -177,7 +182,7 @@ router.patch('/:productId/colors/:colorId/image', authAdmin, async (req, res) =>
     let colorImages = existingColor.images
     const imageIndex = colorImages.indexOf(req.body.imgUrl)
     colorImages.splice(imageIndex, 1)
-    FileHelper.deleteFile(`uploads/products/${req.params.productId}/${req.body.imgUrl}`)
+    FileHelper.deleteFile(req.body.imgUrl)
 
     await product.save()
     res.send(product)
@@ -186,7 +191,29 @@ router.patch('/:productId/colors/:colorId/image', authAdmin, async (req, res) =>
   }
 })
 
+// DELETE COLOR FORM PRODUCT
+router.delete('/:productId/colors/:colorId', authAdmin, async (req, res) => {
+  try {
+    const product = await Product.findOne({ _id: req.params.productId })
+    const existingColor = product.colors.find(color => color._id.equals(req.params.colorId))
+    
+    if (!existingColor) {
+      return res.status(404).send()
+    }
 
+    existingColor.images.map(image => {
+      FileHelper.deleteFile(image)
+    })
+
+    product.colors.id(req.params.colorId).remove()
+
+    await product.save()
+    res.send(product)
+  } catch (error) {
+    console.log({error})
+    res.status(500).send(error)
+  }
+})
 
 // Get product by id
 router.get('/:id', async (req, res) => {
@@ -199,7 +226,9 @@ router.get('/:id', async (req, res) => {
       'active collectionId description mainImageUrl price stock title colors'
     )
 
-    !product && res.status(404).send()
+    !product && res.status(404).send({ 
+      message: 'Product not found. Please check the provided information.' 
+    })
 
     if (isEdit) {
       const collections = await Collection.find({}, 'title')
@@ -209,22 +238,33 @@ router.get('/:id', async (req, res) => {
     }
     console.log('get product by id', responseObj)
     res.send(responseObj)
-  } catch (e) {
-    res.status(500).send(e)
+  } catch (error) {
+    res.status(500).send(error)
   }
 })
 
-// Delete product
+// DELETE PRODUCTS //
 router.delete('/:id', authAdmin, async (req, res) => {
+  let searchOptions = {}
+  const productId = req.params.id
+
   try {
-    const product = await Product.findOneAndDelete({ _id: req.params.id })
+    const product = await Product.findOneAndDelete({ _id: productId })
     if (!product) {
-      return res.status(404).send()
+      return res.status(404).send('Product not found.')
     }
-    // res.send(product)
-    res.send('Product ssuccesfuly deleted!')
-  } catch (e) {
-    res.status(500).send(e)
+
+    const directoryPath = path.join(__dirname, '../..', `/uploads/products/${productId}`)
+
+    FileHelper.deleteDirectoryRecursive(directoryPath)
+    FileHelper.deleteFile(product.mainImageUrl)
+
+    //TODO: send back all products after delete this particular product (have in mind existing searching options)
+    const products = await Product.find(searchOptions, 'title price stock mainImageUrl collectionId active')
+
+    res.send(products)
+  } catch (error) {
+    res.status(500).send(error)
   }
 })
 
