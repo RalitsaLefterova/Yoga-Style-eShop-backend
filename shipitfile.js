@@ -1,7 +1,8 @@
 module.exports = shipit => {
 
-  require('shipit-deploy')(shipit);
-  require('shipit-shared')(shipit);
+  require('shipit-deploy')(shipit)
+  require('shipit-shared')(shipit)
+  const fs = require('fs')
 
   const appName = 'api-yoga-style';
 
