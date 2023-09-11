@@ -135,7 +135,7 @@ router.patch('/reorder/:id/', authAdmin, async (req, res) => {
 
 // DELETE COLLECTION (Admin)
 router.delete('/:id', authAdmin, async (req, res) => {
-  console.log('------ delete collection ------')
+  console.log('------ delete collection request ------')
   try {
     const collectionId = req.params.id
 

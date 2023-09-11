@@ -73,6 +73,8 @@ module.exports = shipit => {
 
   shipit.blTask('create-symlink', async () => {
     // TODO first check if directory exists
+    shipit.log(`uploadsFolderPath: ${uploadsFolderPath}`);
+    shipit.log(`shipit.releasePath: ${shipit.releasePath}`);
     await shipit.remote(`ln -nfs ${uploadsFolderPath} ${shipit.releasePath}`)
   })
 
@@ -92,7 +94,7 @@ module.exports = shipit => {
   shipit.on('updated', function () {
     shipit.log('--------------- 3 Updated ------------------');
     shipit.start('npm:install', 'copy-config');
-    // shipit.start('create-symlink');
+    shipit.start('create-symlink');
   });
 
   shipit.on('published', function () {
