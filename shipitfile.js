@@ -74,6 +74,7 @@ module.exports = shipit => {
 
   shipit.blTask('create-symlink', async () => {
     const targetDirectory = uploadsFolderPath // The directory we want to create a symlink to
+    const symlinkName = 'uploads' // Unique symbolic link name
     shipit.log(`uploadsFolderPath: ${uploadsFolderPath}`)
     shipit.log(`shipit.releasePath: ${shipit.releasePath}`)
 
@@ -84,8 +85,8 @@ module.exports = shipit => {
         return // Exit the task if the directory doesn't exist
       }
       // Create a symbolic link
-      await shipit.remote(`ln -nfs ${uploadsFolderPath} ${shipit.releasePath}`)
-      shipit.log(`Symbolic link created: ${uploadsFolderPath} -> ${shipit.releasePath}`)
+      await shipit.remote(`ln -nfs ${uploadsFolderPath} ${shipit.releasePath}/${symlinkName}`)
+      shipit.log(`Symbolic link created: ${uploadsFolderPath} -> ${shipit.releasePath}/${symlinkName}`)
     } catch (error) {
       shipit.log(`Error creating symbolic link: ${error.message}`)
     }
