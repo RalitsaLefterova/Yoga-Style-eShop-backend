@@ -135,6 +135,7 @@ router.patch('/reorder/:id/', authAdmin, async (req, res) => {
 
 // DELETE COLLECTION (Admin)
 router.delete('/:id', authAdmin, async (req, res) => {
+  console.log('------ delete collection ------')
   try {
     const collectionId = req.params.id
 
@@ -148,9 +149,9 @@ router.delete('/:id', authAdmin, async (req, res) => {
     const collection = await Collection.findOneAndDelete({ _id: req.params.id})
 
     if (!collection) {
-      return res.status(404).send()
+      return res.status(404).send({ message: "Cannot find collection." })
     }
-
+    console.log('collection for delete:', collection)
     // Delete the associated cover file
     FileHelper.deleteFile(collection.cover)
 
@@ -159,7 +160,10 @@ router.delete('/:id', authAdmin, async (req, res) => {
 
     res.send(collections)
   } catch (error) {
-    res.status(500).send(error.message)
+    res.status(400).send({
+      message: error.message || "An unknown error occurred",
+      details: error.errors || {}
+    })
   }
 })
 

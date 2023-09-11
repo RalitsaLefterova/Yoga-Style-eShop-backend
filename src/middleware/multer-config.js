@@ -35,7 +35,6 @@ const uploadProductImageStorage = multer.diskStorage({
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now()
     const sanitizedTtitle = sanitizeTitle(req.body.title)
-    console.log({sanitizedTtitle})
     cb(null, 'product-' + sanitizedTtitle.toLowerCase() + '-' + uniqueSuffix + path.extname(file.originalname))
   }
 })

@@ -26,6 +26,11 @@ module.exports = shipit => {
             path: 'uploads/collections',
             overwrite: true,
             chmod: '-R 777',
+          },
+          {
+            path: 'uploads/products',
+            overwrite: true,
+            chmod: '-R 777',
           }
         ]
       }
