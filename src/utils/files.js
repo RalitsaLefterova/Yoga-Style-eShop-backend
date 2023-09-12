@@ -6,8 +6,8 @@ const createFilePath = (file) => {
 }
 
 const deleteFile = (filePath) => {
-  console.log({filePath})
-  fs.unlink(filePath, (error) => {
+  const pathToFile = path.join(__dirname, '../..', filePath)
+  fs.unlink(pathToFile, (error) => {
     if (error) {
       throw (error)
     }
