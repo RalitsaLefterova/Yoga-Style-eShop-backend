@@ -6,6 +6,7 @@ const createFilePath = (file) => {
 }
 
 const deleteFile = (filePath) => {
+  console.log({filePath})
   fs.unlink(filePath, (error) => {
     if (error) {
       throw (error)
