@@ -33,14 +33,16 @@ router.post('/', authAdmin, uploadProductImage.single('mainImageUrl'), async (re
 // GET /products?limit=10&skip20
 // GET /products?sortBy=createdAt:desc
 router.get('/', async (req, res) => {
+  console.log('req.query', req.query)
   const sort = {}
+  const collectionTitle = req.query.collectionTitle
   let searchOptions = {}
-  // console.log('req.query', req.query)
   
   try {
-    if (req.query.collectionTitle) {
-      const collection = await Collection.find({ title: req.query.collectionTitle.toLowerCase() })
-      // console.log('collection', collection, req.query.collectionTitle.toLowerCase())
+    if (collectionTitle) {
+      const regexTitle = new RegExp(`^${collectionTitle}$`, 'i')
+      const collection = await Collection.find({ title: regexTitle })
+      console.log('collection', collection, req.query.collectionTitle)
       if (!collection) {
         return res.status(404).send('collection not found')
       }
@@ -56,13 +58,13 @@ router.get('/', async (req, res) => {
       const parts = req.query.sortBy(split(':'))
       sort[parts[0]] = parts[1] === 'desc' ? -1 : 1
     }
-    // console.log('searchOptions', searchOptions)
+    console.log('searchOptions', searchOptions)
     const products = await Product.find(searchOptions, 'title price stock mainImageUrl collectionId active')
-    // console.log('get all products', products)
+    console.log('get all products', products)
 
     res.send(products)
   } catch (e) {
-    res.status(500).send(e)
+    res.status(400).send(e)
   }
 })
 
