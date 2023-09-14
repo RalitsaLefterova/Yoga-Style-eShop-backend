@@ -37,7 +37,7 @@ router.get('/', async (req, res) => {
 
   try {
     if (isShortInfo) {
-      collections = await Collection.find({}, '_id title').sort('position')
+      collections = await Collection.find({}, '_id title urlTitle').sort('position')
     } else if (isActiveCollectionsOnly) {
       collections = await Collection.find({ active: true }).sort('position')
     } else {

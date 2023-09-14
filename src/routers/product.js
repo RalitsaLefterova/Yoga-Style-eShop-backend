@@ -40,9 +40,7 @@ router.get('/', async (req, res) => {
   
   try {
     if (collectionTitle) {
-      const regexTitle = new RegExp(`^${collectionTitle}$`, 'i')
-      const collection = await Collection.find({ title: regexTitle })
-      console.log('collection', collection, req.query.collectionTitle)
+      const collection = await Collection.find({ urlTitle: collectionTitle })
       if (!collection) {
         return res.status(404).send('collection not found')
       }
@@ -58,9 +56,8 @@ router.get('/', async (req, res) => {
       const parts = req.query.sortBy(split(':'))
       sort[parts[0]] = parts[1] === 'desc' ? -1 : 1
     }
-    console.log('searchOptions', searchOptions)
+
     const products = await Product.find(searchOptions, 'title price stock mainImageUrl collectionId active')
-    console.log('get all products', products)
 
     res.send(products)
   } catch (e) {
