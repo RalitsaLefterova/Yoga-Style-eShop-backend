@@ -10,11 +10,14 @@ const router = new express.Router()
 
 // CREATE COLLECTION 
 router.post('/', authAdmin, uploadCollectionImage.single('cover'), async (req, res, next) => {
-  const title = req.body.title
-  const cover = req.file ? `uploads/collections/${req.file.filename}` : ''
+  const newCollectionData = {
+    title: req.body.title,
+    cover: req.file ? `uploads/collections/${req.file.filename}` : '',
+    collectionTeaser: req.body.collectionTeaser || ''
+  }
 
   try {
-    const collection = new Collection({ title, cover })
+    const collection = new Collection(newCollectionData)
     const collections = await Collection.find({})
 
     collection.position = collections.length
@@ -70,7 +73,7 @@ router.patch('/:id', authAdmin, uploadCollectionImage.single('cover'), async (re
     req.body.cover = `uploads/collections/${req.file.filename}`
   }
   const updates = Object.keys(req.body)
-  const allowedUpdates = ['title', 'active', 'cover']
+  const allowedUpdates = ['title', 'active', 'cover', 'collectionTeaser']
   const isValidOperation = updates.every((update) => allowedUpdates.includes(update))
 
   if (!isValidOperation) {

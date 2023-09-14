@@ -33,19 +33,18 @@ router.post('/', authAdmin, uploadProductImage.single('mainImageUrl'), async (re
 // GET /products?limit=10&skip20
 // GET /products?sortBy=createdAt:desc
 router.get('/', async (req, res) => {
-  console.log('req.query', req.query)
-  const sort = {}
   const collectionTitle = req.query.collectionTitle
+  let sort = {}
   let searchOptions = {}
+  let collection = {}
   
   try {
     if (collectionTitle) {
-      const collection = await Collection.find({ urlTitle: collectionTitle })
+      collection = await Collection.findOne({ urlTitle: collectionTitle })
       if (!collection) {
         return res.status(404).send('collection not found')
       }
-
-      searchOptions = { collectionId: collection[0]._id } 
+      searchOptions = { collectionId: collection._id } 
     }
 
     if (req.query.active) {
@@ -59,9 +58,13 @@ router.get('/', async (req, res) => {
 
     const products = await Product.find(searchOptions, 'title price stock mainImageUrl collectionId active')
 
+    if (collectionTitle && collection) {
+      return res.send({collection, products})
+    } 
+    
     res.send(products)
-  } catch (e) {
-    res.status(400).send(e)
+  } catch (error) {
+    res.status(400).send(error)
   }
 })
 
