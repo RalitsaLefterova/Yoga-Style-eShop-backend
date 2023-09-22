@@ -44,7 +44,7 @@ router.patch('/remove/:productId', auth, async (req, res) => {
     }
 
     await req.user.save()
-    res.send('Successfully decrease quantity of the product.')
+    res.send({ id: existingProduct.productId })
   } catch(error) {
     res.send(error)
   }
@@ -59,7 +59,7 @@ router.patch('/clear/:productId', auth, async (req, res) => {
     req.user.cart = updatedCartItems
 
     await req.user.save()
-    res.send('Successfully remove product from cart.')    
+    res.send({ id: productId })    
   } catch(error) {
     res.send(error)
   }

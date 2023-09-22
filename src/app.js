@@ -12,6 +12,7 @@ const cartRouter = require('./routers/cart')
 const orderRouter = require('./routers/order')
 const addressRouter = require('./routers/address')
 const paymentsRouter = require('./routers/payments')
+const statisticsRouter = require('./routers/statistics')
 
 const app = express()
 
@@ -38,6 +39,7 @@ app.use('/cart', cartRouter)
 app.use('/orders', orderRouter)
 app.use('/address', addressRouter)
 app.use('/payment', paymentsRouter)
+app.use('/statistics', statisticsRouter)
 
 app.use((req, res, next) => {
   const allowedOrigins = [
