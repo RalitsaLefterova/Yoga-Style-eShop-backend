@@ -6,41 +6,36 @@ module.exports = shipit => {
 
   const appName = 'api-yoga-style'
 
-  const commonConfig = {
-    repositoryUrl: 'git@github.com:RalitsaLefterova/Yoga-Style-eShop-backend.git',
-    keepReleases: 5
-  }
-
   shipit.initConfig({
-    shared: {
-      dirs: [
-        {
-          path: 'node_modules',
-          overwrite: true,
-          chmod: '-R 777',
-        },
-        {
-          path: 'uploads/collections',
-          overwrite: true,
-          chmod: '-R 777',
-        },
-        {
-          path: 'uploads/products',
-          overwrite: true,
-          chmod: '-R 777',
-        }
-      ]
-    },
-    staging: {
-      ...commonConfig,
+    default: {
       branch: 'main',
       servers: 'root@172.104.251.14',
+      repositoryUrl: 'git@github.com:RalitsaLefterova/Yoga-Style-eShop-backend.git',
+      keepReleases: 5,
+      shared: {
+        dirs: [
+          {
+            path: 'node_modules',
+            overwrite: true,
+            chmod: '-R 777',
+          },
+          {
+            path: 'uploads/collections',
+            overwrite: true,
+            chmod: '-R 777',
+          },
+          {
+            path: 'uploads/products',
+            overwrite: true,
+            chmod: '-R 777',
+          }
+        ]
+      }
+    },
+    staging: {
       deployTo: '/root/Yoga-Style-eShop-backend-staging'
     },
     production: {
-      ...commonConfig,
-      branch: 'main',
-      servers: 'root@172.104.251.14',
       deployTo: '/root/Yoga-Style-eShop-backend'
     }
   })
