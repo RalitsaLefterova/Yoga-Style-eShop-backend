@@ -20,15 +20,20 @@ module.exports = shipit => {
             chmod: '-R 777',
           },
           {
-            path: 'uploads/collections',
+            path: 'uploads',
             overwrite: true,
             chmod: '-R 777',
           },
-          {
-            path: 'uploads/products',
-            overwrite: true,
-            chmod: '-R 777',
-          }
+          // {
+          //   path: 'uploads/collections',
+          //   overwrite: true,
+          //   chmod: '-R 777',
+          // },
+          // {
+          //   path: 'uploads/products',
+          //   overwrite: true,
+          //   chmod: '-R 777',
+          // }
         ]
       }
     },
@@ -67,26 +72,26 @@ module.exports = shipit => {
     await shipit.remote(`pm2 start ${shipit.currentPath}/src/index.js -n ${appName} ${ecosystemFilePath} --env production`)
   })
 
-  shipit.blTask('create-symlink', async () => {
-    const targetDirectory = uploadsFolderPath // The directory we want to create a symlink to
-    const symlinkName = 'uploads' // Unique symbolic link name
-    shipit.log(`uploadsFolderPath: ${uploadsFolderPath}`)
-    shipit.log(`shipit.releasePath: ${shipit.releasePath}`)
+  // shipit.blTask('create-symlink', async () => {
+  //   const targetDirectory = uploadsFolderPath // The directory we want to create a symlink to
+  //   const symlinkName = 'uploads' // Unique symbolic link name
+  //   shipit.log(`uploadsFolderPath: ${uploadsFolderPath}`)
+  //   shipit.log(`shipit.releasePath: ${shipit.releasePath}`)
 
-    // Check if the target directory exists
-    try {
-      if (!fs.existsSync(targetDirectory)) {
-        shipit.log(`Target directory does not exist: ${targetDirectory}`)
-        return // Exit the task if the directory doesn't exist
-      }
-      // Create a symbolic link
-      await shipit.remote(`ln -nfs ${uploadsFolderPath} ${shipit.releasePath}/${symlinkName}`)
-      shipit.log(`Symbolic link created: ${uploadsFolderPath} -> ${shipit.releasePath}/${symlinkName}`)
-    } catch (error) {
-      shipit.log(`Error creating symbolic link: ${error.message}`)
-    }
-    // await shipit.remote(`ln -nfs ${uploadsFolderPath} ${shipit.releasePath}`)
-  })
+  //   // Check if the target directory exists
+  //   try {
+  //     if (!fs.existsSync(targetDirectory)) {
+  //       shipit.log(`Target directory does not exist: ${targetDirectory}`)
+  //       return // Exit the task if the directory doesn't exist
+  //     }
+  //     // Create a symbolic link
+  //     await shipit.remote(`ln -nfs ${uploadsFolderPath} ${shipit.releasePath}/${symlinkName}`)
+  //     shipit.log(`Symbolic link created: ${uploadsFolderPath} -> ${shipit.releasePath}/${symlinkName}`)
+  //   } catch (error) {
+  //     shipit.log(`Error creating symbolic link: ${error.message}`)
+  //   }
+  //   // await shipit.remote(`ln -nfs ${uploadsFolderPath} ${shipit.releasePath}`)
+  // })
 
   // shipit.blTask('server:restart', async () => {
   //   const command = 'pm2 restart all'
@@ -103,7 +108,8 @@ module.exports = shipit => {
 
   shipit.on('updated', function () {
     shipit.log('--------------- 3 Updated ------------------')
-    shipit.start('npm:install', 'copy-config', 'create-symlink')
+    shipit.start('npm:install', 'copy-config')
+    // shipit.start('npm:install', 'copy-config', 'create-symlink')
   })
   
 
