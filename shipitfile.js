@@ -31,12 +31,6 @@ module.exports = shipit => {
         }
       ]
     },
-    // development: {
-    //   ...commonConfig,
-    //   branch: 'development',
-    //   servers: 'root@172.104.251.14',
-    //   deployTo: '/root/Yoga-Style-eShop-backend-dev'
-    // },
     staging: {
       ...commonConfig,
       branch: 'main',
@@ -114,9 +108,9 @@ module.exports = shipit => {
 
   shipit.on('updated', function () {
     shipit.log('--------------- 3 Updated ------------------')
-    shipit.start('npm:install', 'copy-config');
-    shipit.start('create-symlink');
+    shipit.start('npm:install', 'copy-config', 'create-symlink')
   })
+  
 
   shipit.on('published', function () {
     shipit.log('--------------- 4 Published ------------------')
