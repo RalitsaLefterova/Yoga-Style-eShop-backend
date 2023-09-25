@@ -213,7 +213,7 @@ router.get('/top-3-bestsellers', auth, async (req, res) => {
         product: product._id,
         totalQuantity: product.totalQuantity,
         mostRecentOrderDate: product.mostRecentOrderDate
-      };
+      }
     })
 
     const top3Bestsellers = {}
