@@ -22,6 +22,29 @@ router.get('/me', auth, async (req, res) => {
   }
 })
 
+// USER: GET user shipping address
+router.get('/me/shipping-address', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id)
+
+    if (!user) {
+      return res.status(404).send({ message: 'User not found' });
+    }
+
+    if (!user.shippingAddress) {
+      return res.status(404).send({ message: 'Shipping address not found' });
+    }
+
+    const shippingAddress = user.addresses.find(
+      (address) => address._id.toString() === user.shippingAddress.toString()
+    )
+
+    res.send(shippingAddress)
+  } catch (error) {
+    res.send(error)
+  }
+})
+
 // ADMIN: GET all users
 router.get('/', authAdmin, async (req, res) => {
   console.log('in GET all users list')
