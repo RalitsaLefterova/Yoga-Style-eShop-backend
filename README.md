@@ -44,4 +44,8 @@ Mongoose simplifies the process of defining schemas, performing CRUD operations,
 - PM2 for process management
 <!-- - Jest and Supertest for testing -->
 
+## Author
 
+Hi there! I'm Ralitsa Lefterova, a passionate Frontend Developer with a love for creating beautiful and functional web experiences. With a background in Graphic Design and Prepress, I'm dedicated to crafting user-centric solutions that make a positive impact. Feel free to connect with me on LinkedIn or explore my GitHub repositories to learn more about my work.
+
+[![linkedin](https://img.shields.io/badge/Ralitsa_Lefterova-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/ralitsalefterova/)
