@@ -33,7 +33,6 @@ Mongoose simplifies the process of defining schemas, performing CRUD operations,
 - Express
 - Mongoose
 - MongoDB Atlas
-- CORS
 - JWT (JSON Web Tokens) for authentication
 - Bcrypt for password hashing
 - Multer for handling file uploads
