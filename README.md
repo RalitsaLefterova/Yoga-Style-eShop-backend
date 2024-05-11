@@ -33,6 +33,9 @@ Mongoose simplifies the process of defining schemas, performing CRUD operations,
 - Express
 - Mongoose
 - MongoDB Atlas
+<!-- - Jest and Supertest for testing -->
+
+### Additional Plugins/Tools:
 - JWT (JSON Web Tokens) for authentication
 - Bcrypt for password hashing
 - Multer for handling file uploads
@@ -40,9 +43,6 @@ Mongoose simplifies the process of defining schemas, performing CRUD operations,
 - Stripe for payment processing
 - Validator for input validation
 - XSS for Cross-Site Scripting prevention
-<!-- - Jest and Supertest for testing -->
-
-### Additional Plugins/Tools:
 - PM2 for process management
 
 ## Author
